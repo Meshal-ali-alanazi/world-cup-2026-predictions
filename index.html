@@ -271,8 +271,8 @@
       }
 
       .crest img {
-        width: 28px;
-        height: 28px;
+        width: 34px;
+        height: 34px;
         object-fit: contain;
       }
 
@@ -642,11 +642,27 @@
           editToken: current?.editToken || randomToken(),
           displayName,
         };
-        localStorage.setItem(LOCAL_PLAYER_KEY, JSON.stringify(state.player));
 
-        renderIdentity();
-        await loadMatches();
-        setMessage("Name saved. You can now predict open matches.", "success");
+        setBusy(els.magicLinkButton, true, "Saving...");
+        try {
+          const { error } = await state.client.rpc("register_guest_player", {
+            p_guest_id: state.player.id,
+            p_edit_token: state.player.editToken,
+            p_display_name: state.player.displayName,
+          });
+
+          if (error) throw error;
+
+          localStorage.setItem(LOCAL_PLAYER_KEY, JSON.stringify(state.player));
+          renderIdentity();
+          await Promise.all([loadMatches(), loadLeaderboard()]);
+          setMessage("Name saved. You can now predict open matches.", "success");
+        } catch (error) {
+          state.player = current;
+          setMessage(error.message || "Could not save name.", "error");
+        } finally {
+          setBusy(els.magicLinkButton, false, "Continue");
+        }
       }
 
       function showNameForm() {
@@ -748,6 +764,14 @@
               }, 250);
             },
           )
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "public", table: "guest_players" },
+            () => {
+              window.clearTimeout(state.leaderboardTimer);
+              state.leaderboardTimer = window.setTimeout(loadLeaderboard, 250);
+            },
+          )
           .subscribe((status) => {
             els.realtimeStatus.textContent = `Realtime ${status.toLowerCase()}`;
           });
@@ -841,7 +865,7 @@
         const safeTla = escapeHtml(tla || "");
         const fallback = escapeHtml((tla || name || "TBD").slice(0, 3).toUpperCase());
         const image = crest
-          ? `<img src="${escapeAttribute(crest)}" alt="${safeName} crest" loading="lazy" onerror="this.remove()">`
+          ? `<img src="${escapeAttribute(crest)}" alt="${safeName} crest" loading="lazy" onerror="this.outerHTML='${escapeAttribute(fallback)}'">`
           : fallback;
 
         if (side === "away") {
@@ -869,7 +893,7 @@
 
       function renderLeaderboard(rows) {
         if (rows.length === 0) {
-          els.leaderboardList.innerHTML = '<div class="empty">No predictions yet.</div>';
+          els.leaderboardList.innerHTML = '<div class="empty">No members yet.</div>';
           return;
         }
 
