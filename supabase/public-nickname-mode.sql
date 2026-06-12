@@ -1,7 +1,7 @@
 -- Convert the app from Magic Link auth to public nickname mode.
 -- Run this once in Supabase SQL Editor after the original schema.sql.
 
-create extension if not exists pgcrypto;
+create extension if not exists pgcrypto with schema extensions;
 
 alter table public.predictions
   alter column user_id drop not null;
@@ -118,7 +118,7 @@ begin
     raise exception 'This match is locked.';
   end if;
 
-  v_hash := encode(digest(p_edit_token, 'sha256'), 'hex');
+  v_hash := encode(extensions.digest(p_edit_token, 'sha256'::text), 'hex');
 
   select edit_token_hash
   into v_existing_hash
