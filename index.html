@@ -1,0 +1,1094 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>World Cup 2026 Predictions</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f6f7f4;
+        --panel: #ffffff;
+        --panel-soft: #eef4ed;
+        --text: #17201b;
+        --muted: #65716a;
+        --line: #d9e0db;
+        --accent: #0f7b63;
+        --accent-dark: #0b5948;
+        --danger: #bb3d2b;
+        --warning: #a66a00;
+        --shadow: 0 16px 40px rgba(22, 30, 26, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          linear-gradient(180deg, rgba(15, 123, 99, 0.10), transparent 360px),
+          var(--bg);
+        color: var(--text);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      button {
+        border: 0;
+        border-radius: 6px;
+        background: var(--accent);
+        color: #fff;
+        cursor: pointer;
+        font-weight: 700;
+        min-height: 42px;
+        padding: 0 16px;
+        transition: background 0.16s ease, transform 0.16s ease;
+      }
+
+      button:hover:not(:disabled) {
+        background: var(--accent-dark);
+        transform: translateY(-1px);
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.54;
+      }
+
+      button.secondary {
+        background: #e7ece8;
+        color: var(--text);
+      }
+
+      button.secondary:hover:not(:disabled) {
+        background: #d8e1db;
+      }
+
+      button.danger {
+        background: var(--danger);
+      }
+
+      input {
+        width: 100%;
+        min-height: 42px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #fff;
+        color: var(--text);
+        padding: 0 12px;
+        outline: none;
+      }
+
+      input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(15, 123, 99, 0.14);
+      }
+
+      input:disabled {
+        background: #f1f3f1;
+        color: var(--muted);
+      }
+
+      .shell {
+        width: min(1180px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 28px 0 48px;
+      }
+
+      .topbar {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 20px;
+        align-items: center;
+        padding-bottom: 24px;
+      }
+
+      .brand {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .brand h1 {
+        margin: 0;
+        font-size: clamp(30px, 4vw, 52px);
+        line-height: 1;
+        letter-spacing: 0;
+      }
+
+      .brand p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 15px;
+      }
+
+      .session {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        min-height: 34px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.72);
+        color: var(--muted);
+        padding: 0 12px;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 360px;
+        gap: 20px;
+        align-items: start;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+      }
+
+      .panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        border-bottom: 1px solid var(--line);
+        padding: 18px;
+      }
+
+      .panel-title {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .panel-title h2 {
+        margin: 0;
+        font-size: 18px;
+      }
+
+      .panel-title span {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .message {
+        display: none;
+        margin-bottom: 16px;
+        border-radius: 8px;
+        padding: 12px 14px;
+        background: var(--panel-soft);
+        color: var(--text);
+        border: 1px solid var(--line);
+        font-size: 14px;
+      }
+
+      .message.show {
+        display: block;
+      }
+
+      .message.error {
+        background: #fff0ed;
+        border-color: #f0c1b8;
+        color: #7d2619;
+      }
+
+      .message.success {
+        background: #edf8f1;
+        border-color: #bde3ca;
+        color: #174f2a;
+      }
+
+      .auth-box {
+        display: grid;
+        grid-template-columns: minmax(220px, 1fr) auto;
+        gap: 10px;
+        padding: 18px;
+      }
+
+      .matches {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 14px;
+      }
+
+      .match-card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        padding: 14px;
+      }
+
+      .match-main {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: 14px;
+        align-items: center;
+      }
+
+      .team {
+        display: grid;
+        grid-template-columns: 42px minmax(0, 1fr);
+        gap: 10px;
+        align-items: center;
+      }
+
+      .team.away {
+        grid-template-columns: minmax(0, 1fr) 42px;
+        text-align: right;
+      }
+
+      .crest {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        border: 1px solid var(--line);
+        background: #f3f5f3;
+        display: grid;
+        place-items: center;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 800;
+        overflow: hidden;
+      }
+
+      .crest img {
+        width: 28px;
+        height: 28px;
+        object-fit: contain;
+      }
+
+      .team-name {
+        min-width: 0;
+        font-weight: 800;
+        overflow-wrap: anywhere;
+      }
+
+      .team-code {
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .score-box {
+        min-width: 150px;
+        text-align: center;
+      }
+
+      .kickoff {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 6px;
+      }
+
+      .score-line {
+        font-size: 26px;
+        font-weight: 900;
+        line-height: 1;
+      }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        margin-top: 8px;
+        padding: 0 8px;
+        border-radius: 999px;
+        background: #e8efeb;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 900;
+      }
+
+      .status.open {
+        background: #e2f4ea;
+        color: #126238;
+      }
+
+      .status.locked {
+        background: #fff2de;
+        color: var(--warning);
+      }
+
+      .prediction-row {
+        display: grid;
+        grid-template-columns: 74px 18px 74px auto;
+        gap: 10px;
+        align-items: center;
+        margin-top: 14px;
+      }
+
+      .prediction-row input {
+        text-align: center;
+        font-weight: 800;
+      }
+
+      .dash {
+        color: var(--muted);
+        font-weight: 900;
+        text-align: center;
+      }
+
+      .prediction-note {
+        grid-column: 1 / -1;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .leaderboard-list {
+        padding: 8px 14px 14px;
+      }
+
+      .leader-row {
+        display: grid;
+        grid-template-columns: 34px 1fr auto;
+        gap: 10px;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .leader-row:last-child {
+        border-bottom: 0;
+      }
+
+      .rank {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: #e8efeb;
+        color: var(--muted);
+        display: grid;
+        place-items: center;
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .leader-name {
+        font-weight: 800;
+        overflow-wrap: anywhere;
+      }
+
+      .leader-meta {
+        color: var(--muted);
+        font-size: 12px;
+        margin-top: 2px;
+      }
+
+      .points {
+        font-size: 18px;
+        font-weight: 900;
+      }
+
+      .admin {
+        display: none;
+        border-top: 1px solid var(--line);
+        padding: 14px;
+      }
+
+      .admin.show {
+        display: block;
+      }
+
+      .empty,
+      .loading {
+        padding: 22px;
+        color: var(--muted);
+        text-align: center;
+      }
+
+      .hide {
+        display: none !important;
+      }
+
+      @media (max-width: 900px) {
+        .topbar,
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        .session {
+          justify-content: flex-start;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .shell {
+          width: min(100% - 20px, 1180px);
+          padding-top: 18px;
+        }
+
+        .panel-header,
+        .auth-box {
+          grid-template-columns: 1fr;
+        }
+
+        .match-main {
+          grid-template-columns: 1fr;
+        }
+
+        .team.away {
+          grid-template-columns: 42px minmax(0, 1fr);
+          text-align: left;
+        }
+
+        .team.away .crest {
+          grid-column: 1;
+          grid-row: 1;
+        }
+
+        .team.away > div:not(.crest) {
+          grid-column: 2;
+        }
+
+        .score-box {
+          min-width: 0;
+          order: -1;
+        }
+
+        .prediction-row {
+          grid-template-columns: 1fr 18px 1fr;
+        }
+
+        .prediction-row button {
+          grid-column: 1 / -1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div class="brand">
+          <h1>World Cup 2026 Predictions</h1>
+          <p id="dateLabel">Today in Mecca time</p>
+        </div>
+        <div class="session">
+          <span id="realtimeStatus" class="pill">Realtime idle</span>
+          <span id="userLabel" class="pill">Signed out</span>
+          <button id="refreshButton" class="secondary" type="button">Refresh</button>
+          <button id="signOutButton" class="secondary hide" type="button">Sign out</button>
+        </div>
+      </header>
+
+      <div id="globalMessage" class="message"></div>
+
+      <section id="authPanel" class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <h2>Email Magic Link</h2>
+            <span>No password required.</span>
+          </div>
+        </div>
+        <form id="authForm" class="auth-box">
+          <input id="emailInput" type="email" autocomplete="email" placeholder="you@example.com" required>
+          <button id="magicLinkButton" type="submit">Send Magic Link</button>
+        </form>
+      </section>
+
+      <section class="grid" style="margin-top: 20px;">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <h2>Today's Matches</h2>
+              <span id="matchWindowLabel">Asia/Riyadh day window</span>
+            </div>
+          </div>
+          <div id="matchesList" class="matches">
+            <div class="loading">Loading matches...</div>
+          </div>
+        </div>
+
+        <aside class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <h2>Leaderboard</h2>
+              <span id="participantCount">0 participants</span>
+            </div>
+          </div>
+          <div id="leaderboardList" class="leaderboard-list">
+            <div class="loading">Loading leaderboard...</div>
+          </div>
+          <div id="adminPanel" class="admin">
+            <button id="fetchMatchesButton" type="button">Fetch official results</button>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <script>
+      const SUPABASE_URL = "https://ojoroqmmvbhbqpugbkhy.supabase.co";
+      const SUPABASE_ANON_KEY = "sb_publishable_BeVUdF56wvidKtUD_lZIWg_iBMP5E_J";
+      const MECCA_TIME_ZONE = "Asia/Riyadh";
+      const RIYADH_UTC_OFFSET_HOURS = 3;
+      const WORLD_CUP_SEASON = 2026;
+
+      const state = {
+        client: null,
+        session: null,
+        profile: null,
+        matches: [],
+        channel: null,
+        leaderboardTimer: null,
+      };
+
+      const els = {};
+
+      document.addEventListener("DOMContentLoaded", init);
+
+      async function init() {
+        cacheElements();
+        bindEvents();
+        updateDateLabels();
+
+        if (!isConfigured()) {
+          setMessage("Replace SUPABASE_URL and SUPABASE_ANON_KEY in index.html before deploying.", "error");
+          els.magicLinkButton.disabled = true;
+          els.refreshButton.disabled = true;
+          els.matchesList.innerHTML = '<div class="empty">Supabase is not configured yet.</div>';
+          els.leaderboardList.innerHTML = '<div class="empty">Supabase is not configured yet.</div>';
+          return;
+        }
+
+        state.client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const { data, error } = await state.client.auth.getSession();
+        if (error) {
+          setMessage(error.message, "error");
+        }
+        state.session = data?.session ?? null;
+
+        state.client.auth.onAuthStateChange(async (event, session) => {
+          state.session = session;
+          if (event === "SIGNED_IN" && window.location.hash.includes("access_token")) {
+            window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+          }
+          await refreshAll();
+        });
+
+        await refreshAll();
+        window.setInterval(loadMatches, 60000);
+      }
+
+      function cacheElements() {
+        [
+          "adminPanel",
+          "authForm",
+          "authPanel",
+          "dateLabel",
+          "emailInput",
+          "fetchMatchesButton",
+          "globalMessage",
+          "leaderboardList",
+          "magicLinkButton",
+          "matchesList",
+          "matchWindowLabel",
+          "participantCount",
+          "realtimeStatus",
+          "refreshButton",
+          "signOutButton",
+          "userLabel",
+        ].forEach((id) => {
+          els[id] = document.getElementById(id);
+        });
+      }
+
+      function bindEvents() {
+        els.authForm.addEventListener("submit", sendMagicLink);
+        els.signOutButton.addEventListener("click", signOut);
+        els.refreshButton.addEventListener("click", refreshAll);
+        els.fetchMatchesButton.addEventListener("click", fetchOfficialResults);
+        els.matchesList.addEventListener("click", (event) => {
+          const button = event.target.closest("button[data-save-match]");
+          if (button) savePrediction(button.dataset.saveMatch);
+        });
+      }
+
+      function isConfigured() {
+        return (
+          SUPABASE_URL.startsWith("https://") &&
+          !SUPABASE_URL.includes("YOUR_PROJECT_REF") &&
+          SUPABASE_ANON_KEY.length > 20 &&
+          !SUPABASE_ANON_KEY.includes("YOUR_SUPABASE_ANON_KEY")
+        );
+      }
+
+      async function refreshAll() {
+        renderSession();
+        await loadProfile();
+        renderSession();
+        await Promise.all([loadMatches(), loadLeaderboard()]);
+        await configureRealtime();
+      }
+
+      async function sendMagicLink(event) {
+        event.preventDefault();
+        clearMessage();
+
+        const email = els.emailInput.value.trim();
+        if (!email) {
+          setMessage("Enter a valid email address.", "error");
+          return;
+        }
+
+        setBusy(els.magicLinkButton, true, "Sending...");
+        try {
+          const { error } = await state.client.auth.signInWithOtp({
+            email,
+            options: {
+              emailRedirectTo: window.location.origin + window.location.pathname,
+            },
+          });
+
+          if (error) throw error;
+          setMessage("Magic Link sent. Check your email and open the link on this device.", "success");
+        } catch (error) {
+          setMessage(error.message || "Could not send Magic Link.", "error");
+        } finally {
+          setBusy(els.magicLinkButton, false, "Send Magic Link");
+        }
+      }
+
+      async function signOut() {
+        clearMessage();
+        const { error } = await state.client.auth.signOut();
+        if (error) {
+          setMessage(error.message, "error");
+        }
+      }
+
+      async function loadProfile() {
+        state.profile = null;
+        if (!state.session?.user) return;
+
+        const { data, error } = await state.client
+          .from("profiles")
+          .select("display_name,email,role")
+          .eq("id", state.session.user.id)
+          .maybeSingle();
+
+        if (error) {
+          setMessage(`Could not load profile: ${error.message}`, "error");
+          return;
+        }
+
+        state.profile = data ?? {
+          display_name: state.session.user.email?.split("@")[0] ?? "Player",
+          email: state.session.user.email,
+          role: "user",
+        };
+      }
+
+      async function loadMatches() {
+        updateDateLabels();
+        const { startUtc, endUtc } = getMeccaTodayBoundsUtc();
+
+        try {
+          const { data: matches, error } = await state.client
+            .from("matches")
+            .select(
+              "football_data_id,utc_date,status,stage,group_name,matchday,home_team_name,home_team_tla,home_team_crest,away_team_name,away_team_tla,away_team_crest,score_home,score_away",
+            )
+            .gte("utc_date", startUtc.toISOString())
+            .lt("utc_date", endUtc.toISOString())
+            .order("utc_date", { ascending: true });
+
+          if (error) throw error;
+
+          const predictionMap = await loadCurrentUserPredictions(matches ?? []);
+          state.matches = (matches ?? []).map((match) => ({
+            ...match,
+            prediction: predictionMap.get(String(match.football_data_id)) ?? null,
+          }));
+
+          renderMatches();
+        } catch (error) {
+          els.matchesList.innerHTML = `<div class="empty">${escapeHtml(error.message || "Could not load matches.")}</div>`;
+        }
+      }
+
+      async function loadCurrentUserPredictions(matches) {
+        const map = new Map();
+        if (!state.session?.user || matches.length === 0) return map;
+
+        const ids = matches.map((match) => match.football_data_id);
+        const { data, error } = await state.client
+          .from("predictions")
+          .select("match_id,home_score,away_score,points")
+          .eq("user_id", state.session.user.id)
+          .in("match_id", ids);
+
+        if (error) throw error;
+        (data ?? []).forEach((prediction) => {
+          map.set(String(prediction.match_id), prediction);
+        });
+        return map;
+      }
+
+      async function loadLeaderboard() {
+        try {
+          const [{ data: rows, error: leaderboardError }, { data: count, error: countError }] = await Promise.all([
+            state.client.rpc("leaderboard"),
+            state.client.rpc("participant_count"),
+          ]);
+
+          if (leaderboardError) throw leaderboardError;
+          if (countError) throw countError;
+
+          els.participantCount.textContent = `${count ?? 0} ${Number(count) === 1 ? "participant" : "participants"}`;
+          renderLeaderboard(rows ?? []);
+        } catch (error) {
+          els.leaderboardList.innerHTML = `<div class="empty">${escapeHtml(error.message || "Could not load leaderboard.")}</div>`;
+        }
+      }
+
+      async function configureRealtime() {
+        if (state.channel) {
+          await state.client.removeChannel(state.channel);
+          state.channel = null;
+        }
+
+        if (!state.session?.access_token) {
+          els.realtimeStatus.textContent = "Realtime offline";
+          return;
+        }
+
+        state.channel = state.client
+          .channel("leaderboard-predictions")
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "public", table: "predictions" },
+            () => {
+              window.clearTimeout(state.leaderboardTimer);
+              state.leaderboardTimer = window.setTimeout(() => {
+                loadLeaderboard();
+                loadMatches();
+              }, 250);
+            },
+          )
+          .subscribe((status) => {
+            els.realtimeStatus.textContent = `Realtime ${status.toLowerCase()}`;
+          });
+      }
+
+      function renderSession() {
+        const user = state.session?.user;
+
+        if (!user) {
+          els.authPanel.classList.remove("hide");
+          els.signOutButton.classList.add("hide");
+          els.userLabel.textContent = "Signed out";
+          els.adminPanel.classList.remove("show");
+          return;
+        }
+
+        const name = state.profile?.display_name || user.email || "Signed in";
+        els.authPanel.classList.add("hide");
+        els.signOutButton.classList.remove("hide");
+        els.userLabel.textContent = name;
+        els.adminPanel.classList.toggle("show", state.profile?.role === "admin");
+      }
+
+      function renderMatches() {
+        if (state.matches.length === 0) {
+          els.matchesList.innerHTML = '<div class="empty">No World Cup matches are stored for today in Mecca time.</div>';
+          return;
+        }
+
+        els.matchesList.innerHTML = state.matches.map(renderMatch).join("");
+      }
+
+      function renderMatch(match) {
+        const kickoff = new Date(match.utc_date);
+        const isOpen = isPredictionOpen(match);
+        const prediction = match.prediction;
+        const statusClass = isOpen ? "open" : "locked";
+        const resultText = match.score_home === null || match.score_away === null
+          ? "v"
+          : `${match.score_home} - ${match.score_away}`;
+        const homeValue = prediction?.home_score ?? "";
+        const awayValue = prediction?.away_score ?? "";
+        const lockReason = predictionLockReason(match);
+        const groupStage = [match.stage, match.group_name].filter(Boolean).join(" / ");
+
+        return `
+          <article class="match-card">
+            <div class="match-main">
+              ${renderTeam(match.home_team_name, match.home_team_tla, match.home_team_crest, "home")}
+              <div class="score-box">
+                <div class="kickoff">${escapeHtml(formatMeccaTime(kickoff))}</div>
+                <div class="score-line">${escapeHtml(resultText)}</div>
+                <div class="status ${statusClass}">${escapeHtml(match.status)}</div>
+              </div>
+              ${renderTeam(match.away_team_name, match.away_team_tla, match.away_team_crest, "away")}
+            </div>
+            <div class="prediction-row">
+              <input
+                data-home-score="${match.football_data_id}"
+                type="number"
+                min="0"
+                max="99"
+                step="1"
+                inputmode="numeric"
+                placeholder="Home"
+                value="${escapeAttribute(homeValue)}"
+                ${isOpen ? "" : "disabled"}
+              >
+              <span class="dash">-</span>
+              <input
+                data-away-score="${match.football_data_id}"
+                type="number"
+                min="0"
+                max="99"
+                step="1"
+                inputmode="numeric"
+                placeholder="Away"
+                value="${escapeAttribute(awayValue)}"
+                ${isOpen ? "" : "disabled"}
+              >
+              <button type="button" data-save-match="${match.football_data_id}" ${isOpen ? "" : "disabled"}>Save</button>
+              <div class="prediction-note">
+                ${escapeHtml(groupStage || "World Cup 2026")}
+                ${prediction ? ` · Your points: ${prediction.points}` : ""}
+                · ${escapeHtml(lockReason)}
+              </div>
+            </div>
+          </article>
+        `;
+      }
+
+      function renderTeam(name, tla, crest, side) {
+        const safeName = escapeHtml(name || "TBD");
+        const safeTla = escapeHtml(tla || "");
+        const fallback = escapeHtml((tla || name || "TBD").slice(0, 3).toUpperCase());
+        const image = crest
+          ? `<img src="${escapeAttribute(crest)}" alt="${safeName} crest" loading="lazy" onerror="this.remove()">`
+          : fallback;
+
+        if (side === "away") {
+          return `
+            <div class="team away">
+              <div>
+                <div class="team-name">${safeName}</div>
+                <div class="team-code">${safeTla}</div>
+              </div>
+              <div class="crest">${image}</div>
+            </div>
+          `;
+        }
+
+        return `
+          <div class="team">
+            <div class="crest">${image}</div>
+            <div>
+              <div class="team-name">${safeName}</div>
+              <div class="team-code">${safeTla}</div>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderLeaderboard(rows) {
+        if (rows.length === 0) {
+          els.leaderboardList.innerHTML = '<div class="empty">No predictions yet.</div>';
+          return;
+        }
+
+        els.leaderboardList.innerHTML = rows.map((row, index) => `
+          <div class="leader-row">
+            <div class="rank">${index + 1}</div>
+            <div>
+              <div class="leader-name">${escapeHtml(row.display_name || "Player")}</div>
+              <div class="leader-meta">${row.predictions_count} predictions · ${row.exact_scores} exact · ${row.correct_outcomes} outcome</div>
+            </div>
+            <div class="points">${row.total_points}</div>
+          </div>
+        `).join("");
+      }
+
+      async function savePrediction(matchId) {
+        clearMessage();
+
+        if (!state.session?.user) {
+          setMessage("Sign in with Magic Link before saving predictions.", "error");
+          return;
+        }
+
+        const match = state.matches.find((item) => String(item.football_data_id) === String(matchId));
+        if (!match || !isPredictionOpen(match)) {
+          setMessage("This match is locked.", "error");
+          await loadMatches();
+          return;
+        }
+
+        const homeInput = document.querySelector(`[data-home-score="${matchId}"]`);
+        const awayInput = document.querySelector(`[data-away-score="${matchId}"]`);
+        const homeScore = readScore(homeInput);
+        const awayScore = readScore(awayInput);
+
+        if (homeScore === null || awayScore === null) {
+          setMessage("Scores must be whole numbers from 0 to 99.", "error");
+          return;
+        }
+
+        const button = document.querySelector(`[data-save-match="${matchId}"]`);
+        setBusy(button, true, "Saving...");
+
+        try {
+          const { error } = await state.client.from("predictions").upsert(
+            {
+              user_id: state.session.user.id,
+              match_id: Number(matchId),
+              home_score: homeScore,
+              away_score: awayScore,
+            },
+            { onConflict: "user_id,match_id" },
+          );
+
+          if (error) throw error;
+          setMessage("Prediction saved.", "success");
+          await Promise.all([loadMatches(), loadLeaderboard()]);
+        } catch (error) {
+          setMessage(error.message || "Could not save prediction.", "error");
+          await loadMatches();
+        } finally {
+          setBusy(button, false, "Save");
+        }
+      }
+
+      async function fetchOfficialResults() {
+        clearMessage();
+
+        if (state.profile?.role !== "admin") {
+          setMessage("Admin role required.", "error");
+          return;
+        }
+
+        setBusy(els.fetchMatchesButton, true, "Fetching...");
+
+        try {
+          const { data, error } = await state.client.functions.invoke("fetch-matches", {
+            body: { season: WORLD_CUP_SEASON },
+          });
+
+          if (error) throw error;
+          setMessage(`Official results refreshed. ${data?.upserted ?? 0} matches upserted.`, "success");
+          await Promise.all([loadMatches(), loadLeaderboard()]);
+        } catch (error) {
+          setMessage(error.message || "Could not fetch official results.", "error");
+        } finally {
+          setBusy(els.fetchMatchesButton, false, "Fetch official results");
+        }
+      }
+
+      function isPredictionOpen(match) {
+        return Boolean(
+          state.session?.user &&
+          match.status === "SCHEDULED" &&
+          new Date(match.utc_date).getTime() > Date.now(),
+        );
+      }
+
+      function predictionLockReason(match) {
+        if (!state.session?.user) return "Sign in to predict";
+        if (match.status !== "SCHEDULED") return "Locked by match status";
+        if (new Date(match.utc_date).getTime() <= Date.now()) return "Locked after kickoff";
+        return "Open until kickoff";
+      }
+
+      function readScore(input) {
+        const value = input?.value.trim() ?? "";
+        if (!/^\d{1,2}$/.test(value)) return null;
+        const score = Number(value);
+        return Number.isInteger(score) && score >= 0 && score <= 99 ? score : null;
+      }
+
+      function updateDateLabels() {
+        const { startUtc, endUtc, dateLabel } = getMeccaTodayBoundsUtc();
+        els.dateLabel.textContent = `${dateLabel} in Mecca time`;
+        els.matchWindowLabel.textContent = `${startUtc.toISOString()} to ${endUtc.toISOString()} UTC`;
+      }
+
+      function getMeccaTodayBoundsUtc(reference = new Date()) {
+        const parts = new Intl.DateTimeFormat("en-CA", {
+          timeZone: MECCA_TIME_ZONE,
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        }).formatToParts(reference);
+
+        const values = Object.fromEntries(parts.filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
+        const year = Number(values.year);
+        const month = Number(values.month);
+        const day = Number(values.day);
+        const startUtc = new Date(Date.UTC(year, month - 1, day, -RIYADH_UTC_OFFSET_HOURS, 0, 0, 0));
+        const endUtc = new Date(startUtc.getTime() + 24 * 60 * 60 * 1000);
+
+        return {
+          startUtc,
+          endUtc,
+          dateLabel: `${values.year}-${values.month}-${values.day}`,
+        };
+      }
+
+      function formatMeccaTime(date) {
+        return new Intl.DateTimeFormat("en", {
+          timeZone: MECCA_TIME_ZONE,
+          month: "short",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+        }).format(date);
+      }
+
+      function setBusy(button, busy, label) {
+        if (!button) return;
+        button.disabled = busy;
+        button.textContent = label;
+      }
+
+      function setMessage(message, type = "") {
+        els.globalMessage.textContent = message;
+        els.globalMessage.className = `message show ${type}`.trim();
+      }
+
+      function clearMessage() {
+        els.globalMessage.textContent = "";
+        els.globalMessage.className = "message";
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function escapeAttribute(value) {
+        return escapeHtml(value);
+      }
+    </script>
+  </body>
+</html>
