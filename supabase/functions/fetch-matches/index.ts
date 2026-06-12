@@ -33,7 +33,7 @@ type FootballDataResponse = {
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-admin-pin",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -64,36 +64,14 @@ Deno.serve(async (req) => {
     const supabaseUrl = requiredEnv("SUPABASE_URL");
     const serviceRoleKey = requiredEnv("SUPABASE_SERVICE_ROLE_KEY");
     const footballDataApiKey = requiredEnv("FOOTBALL_DATA_API_KEY");
+    const adminPin = Deno.env.get("ADMIN_PIN") ?? "";
 
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    const authHeader = req.headers.get("Authorization") ?? "";
-    const accessToken = authHeader.replace(/^Bearer\s+/i, "").trim();
-
-    if (!accessToken) {
-      return json({ error: "Missing Authorization bearer token." }, 401);
-    }
-
-    const { data: authData, error: authError } = await supabase.auth.getUser(accessToken);
-    if (authError || !authData.user) {
-      return json({ error: "Invalid or expired session.", detail: authError?.message }, 401);
-    }
-
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("role,email")
-      .eq("id", authData.user.id)
-      .single();
-
-    if (profileError) {
-      return json({ error: "Could not load user profile.", detail: profileError.message }, 500);
-    }
-
-    if (profile?.role !== "admin") {
-      return json({ error: "Admin role required." }, 403);
-    }
+    const admin = await authorizeAdmin(req, supabase, adminPin);
+    if (!admin.ok) return json({ error: admin.error }, admin.status);
 
     const requestBody = await parseJson(req);
     const season = normalizeSeason(requestBody.season ?? Deno.env.get("WORLD_CUP_SEASON") ?? "2026");
@@ -150,7 +128,7 @@ Deno.serve(async (req) => {
       upserted: rows.length,
       filters: payload.filters ?? null,
       resultSet: payload.resultSet ?? null,
-      triggeredBy: profile.email ?? authData.user.email ?? authData.user.id,
+      triggeredBy: admin.triggeredBy,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
@@ -190,6 +168,57 @@ function toMatchRow(match: FootballDataMatch, season: number) {
     raw: match,
     last_fetched_at: new Date().toISOString(),
   };
+}
+
+async function authorizeAdmin(
+  req: Request,
+  supabase: any,
+  adminPin: string,
+): Promise<{ ok: true; triggeredBy: string } | { ok: false; status: number; error: string }> {
+  const requestPin = req.headers.get("x-admin-pin") ?? "";
+  if (adminPin && requestPin && timingSafeEqual(requestPin, adminPin)) {
+    return { ok: true, triggeredBy: "admin-pin" };
+  }
+
+  const authHeader = req.headers.get("Authorization") ?? "";
+  const accessToken = authHeader.replace(/^Bearer\s+/i, "").trim();
+
+  if (!accessToken) {
+    return { ok: false, status: 401, error: "Missing admin PIN or Authorization bearer token." };
+  }
+
+  const { data: authData, error: authError } = await supabase.auth.getUser(accessToken);
+  if (authError || !authData.user) {
+    return { ok: false, status: 401, error: "Invalid or expired session." };
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("role,email")
+    .eq("id", authData.user.id)
+    .single();
+
+  if (profileError) {
+    return { ok: false, status: 500, error: "Could not load user profile." };
+  }
+
+  if (profile?.role !== "admin") {
+    return { ok: false, status: 403, error: "Admin role required." };
+  }
+
+  return { ok: true, triggeredBy: profile.email ?? authData.user.email ?? authData.user.id };
+}
+
+function timingSafeEqual(left: string, right: string): boolean {
+  const leftBytes = new TextEncoder().encode(left);
+  const rightBytes = new TextEncoder().encode(right);
+  if (leftBytes.length !== rightBytes.length) return false;
+
+  let diff = 0;
+  for (let index = 0; index < leftBytes.length; index += 1) {
+    diff |= leftBytes[index] ^ rightBytes[index];
+  }
+  return diff === 0;
 }
 
 function teamName(team: FootballDataTeam): string {

@@ -485,9 +485,9 @@
         </div>
         <div class="session">
           <span id="realtimeStatus" class="pill">Realtime idle</span>
-          <span id="userLabel" class="pill">Signed out</span>
+          <span id="userLabel" class="pill">No name</span>
           <button id="refreshButton" class="secondary" type="button">Refresh</button>
-          <button id="signOutButton" class="secondary hide" type="button">Sign out</button>
+          <button id="signOutButton" class="secondary hide" type="button">Change name</button>
         </div>
       </header>
 
@@ -496,13 +496,13 @@
       <section id="authPanel" class="panel">
         <div class="panel-header">
           <div class="panel-title">
-            <h2>Email Magic Link</h2>
-            <span>No password required.</span>
+            <h2>Choose your name</h2>
+            <span>No email required.</span>
           </div>
         </div>
         <form id="authForm" class="auth-box">
-          <input id="emailInput" type="email" autocomplete="email" placeholder="you@example.com" required>
-          <button id="magicLinkButton" type="submit">Send Magic Link</button>
+          <input id="emailInput" type="text" autocomplete="name" placeholder="Your display name" minlength="2" maxlength="40" required>
+          <button id="magicLinkButton" type="submit">Continue</button>
         </form>
       </section>
 
@@ -542,11 +542,11 @@
       const MECCA_TIME_ZONE = "Asia/Riyadh";
       const RIYADH_UTC_OFFSET_HOURS = 3;
       const WORLD_CUP_SEASON = 2026;
+      const LOCAL_PLAYER_KEY = "wc2026_public_player";
 
       const state = {
         client: null,
-        session: null,
-        profile: null,
+        player: null,
         matches: [],
         channel: null,
         leaderboardTimer: null,
@@ -571,20 +571,7 @@
         }
 
         state.client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        const { data, error } = await state.client.auth.getSession();
-        if (error) {
-          setMessage(error.message, "error");
-        }
-        state.session = data?.session ?? null;
-
-        state.client.auth.onAuthStateChange(async (event, session) => {
-          state.session = session;
-          if (event === "SIGNED_IN" && window.location.hash.includes("access_token")) {
-            window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
-          }
-          await refreshAll();
-        });
+        state.player = loadPlayer();
 
         await refreshAll();
         window.setInterval(loadMatches, 60000);
@@ -614,8 +601,8 @@
       }
 
       function bindEvents() {
-        els.authForm.addEventListener("submit", sendMagicLink);
-        els.signOutButton.addEventListener("click", signOut);
+        els.authForm.addEventListener("submit", savePlayerName);
+        els.signOutButton.addEventListener("click", showNameForm);
         els.refreshButton.addEventListener("click", refreshAll);
         els.fetchMatchesButton.addEventListener("click", fetchOfficialResults);
         els.matchesList.addEventListener("click", (event) => {
@@ -634,69 +621,49 @@
       }
 
       async function refreshAll() {
-        renderSession();
-        await loadProfile();
-        renderSession();
+        renderIdentity();
         await Promise.all([loadMatches(), loadLeaderboard()]);
         await configureRealtime();
       }
 
-      async function sendMagicLink(event) {
+      async function savePlayerName(event) {
         event.preventDefault();
         clearMessage();
 
-        const email = els.emailInput.value.trim();
-        if (!email) {
-          setMessage("Enter a valid email address.", "error");
+        const displayName = normalizeDisplayName(els.emailInput.value);
+        if (!displayName) {
+          setMessage("Enter a name from 2 to 40 characters.", "error");
           return;
         }
 
-        setBusy(els.magicLinkButton, true, "Sending...");
-        try {
-          const { error } = await state.client.auth.signInWithOtp({
-            email,
-            options: {
-              emailRedirectTo: window.location.origin + window.location.pathname,
-            },
-          });
-
-          if (error) throw error;
-          setMessage("Magic Link sent. Check your email and open the link on this device.", "success");
-        } catch (error) {
-          setMessage(error.message || "Could not send Magic Link.", "error");
-        } finally {
-          setBusy(els.magicLinkButton, false, "Send Magic Link");
-        }
-      }
-
-      async function signOut() {
-        clearMessage();
-        const { error } = await state.client.auth.signOut();
-        if (error) {
-          setMessage(error.message, "error");
-        }
-      }
-
-      async function loadProfile() {
-        state.profile = null;
-        if (!state.session?.user) return;
-
-        const { data, error } = await state.client
-          .from("profiles")
-          .select("display_name,email,role")
-          .eq("id", state.session.user.id)
-          .maybeSingle();
-
-        if (error) {
-          setMessage(`Could not load profile: ${error.message}`, "error");
-          return;
-        }
-
-        state.profile = data ?? {
-          display_name: state.session.user.email?.split("@")[0] ?? "Player",
-          email: state.session.user.email,
-          role: "user",
+        const current = state.player;
+        state.player = {
+          id: current?.id || crypto.randomUUID(),
+          editToken: current?.editToken || randomToken(),
+          displayName,
         };
+        localStorage.setItem(LOCAL_PLAYER_KEY, JSON.stringify(state.player));
+
+        renderIdentity();
+        await loadMatches();
+        setMessage("Name saved. You can now predict open matches.", "success");
+      }
+
+      function showNameForm() {
+        clearMessage();
+        els.authPanel.classList.remove("hide");
+        els.emailInput.value = state.player?.displayName || "";
+        window.setTimeout(() => els.emailInput.focus(), 0);
+      }
+
+      function loadPlayer() {
+        try {
+          const player = JSON.parse(localStorage.getItem(LOCAL_PLAYER_KEY) || "null");
+          if (!player?.id || !player?.editToken || !player?.displayName) return null;
+          return player;
+        } catch {
+          return null;
+        }
       }
 
       async function loadMatches() {
@@ -715,7 +682,7 @@
 
           if (error) throw error;
 
-          const predictionMap = await loadCurrentUserPredictions(matches ?? []);
+          const predictionMap = await loadCurrentPlayerPredictions(matches ?? []);
           state.matches = (matches ?? []).map((match) => ({
             ...match,
             prediction: predictionMap.get(String(match.football_data_id)) ?? null,
@@ -727,15 +694,15 @@
         }
       }
 
-      async function loadCurrentUserPredictions(matches) {
+      async function loadCurrentPlayerPredictions(matches) {
         const map = new Map();
-        if (!state.session?.user || matches.length === 0) return map;
+        if (!state.player || matches.length === 0) return map;
 
         const ids = matches.map((match) => match.football_data_id);
         const { data, error } = await state.client
           .from("predictions")
           .select("match_id,home_score,away_score,points")
-          .eq("user_id", state.session.user.id)
+          .eq("guest_id", state.player.id)
           .in("match_id", ids);
 
         if (error) throw error;
@@ -768,11 +735,6 @@
           state.channel = null;
         }
 
-        if (!state.session?.access_token) {
-          els.realtimeStatus.textContent = "Realtime offline";
-          return;
-        }
-
         state.channel = state.client
           .channel("leaderboard-predictions")
           .on(
@@ -791,22 +753,19 @@
           });
       }
 
-      function renderSession() {
-        const user = state.session?.user;
-
-        if (!user) {
+      function renderIdentity() {
+        if (!state.player) {
           els.authPanel.classList.remove("hide");
           els.signOutButton.classList.add("hide");
-          els.userLabel.textContent = "Signed out";
-          els.adminPanel.classList.remove("show");
+          els.userLabel.textContent = "No name";
+          els.adminPanel.classList.add("show");
           return;
         }
 
-        const name = state.profile?.display_name || user.email || "Signed in";
         els.authPanel.classList.add("hide");
         els.signOutButton.classList.remove("hide");
-        els.userLabel.textContent = name;
-        els.adminPanel.classList.toggle("show", state.profile?.role === "admin");
+        els.userLabel.textContent = state.player.displayName;
+        els.adminPanel.classList.add("show");
       }
 
       function renderMatches() {
@@ -929,8 +888,9 @@
       async function savePrediction(matchId) {
         clearMessage();
 
-        if (!state.session?.user) {
-          setMessage("Sign in with Magic Link before saving predictions.", "error");
+        if (!state.player) {
+          setMessage("Enter your name before saving predictions.", "error");
+          showNameForm();
           return;
         }
 
@@ -955,15 +915,14 @@
         setBusy(button, true, "Saving...");
 
         try {
-          const { error } = await state.client.from("predictions").upsert(
-            {
-              user_id: state.session.user.id,
-              match_id: Number(matchId),
-              home_score: homeScore,
-              away_score: awayScore,
-            },
-            { onConflict: "user_id,match_id" },
-          );
+          const { error } = await state.client.rpc("save_guest_prediction", {
+            p_guest_id: state.player.id,
+            p_edit_token: state.player.editToken,
+            p_display_name: state.player.displayName,
+            p_match_id: Number(matchId),
+            p_home_score: homeScore,
+            p_away_score: awayScore,
+          });
 
           if (error) throw error;
           setMessage("Prediction saved.", "success");
@@ -979,16 +938,15 @@
       async function fetchOfficialResults() {
         clearMessage();
 
-        if (state.profile?.role !== "admin") {
-          setMessage("Admin role required.", "error");
-          return;
-        }
+        const adminPin = window.prompt("Admin PIN");
+        if (!adminPin) return;
 
         setBusy(els.fetchMatchesButton, true, "Fetching...");
 
         try {
           const { data, error } = await state.client.functions.invoke("fetch-matches", {
             body: { season: WORLD_CUP_SEASON },
+            headers: { "x-admin-pin": adminPin },
           });
 
           if (error) throw error;
@@ -1003,14 +961,14 @@
 
       function isPredictionOpen(match) {
         return Boolean(
-          state.session?.user &&
+          state.player &&
           match.status === "SCHEDULED" &&
           new Date(match.utc_date).getTime() > Date.now(),
         );
       }
 
       function predictionLockReason(match) {
-        if (!state.session?.user) return "Sign in to predict";
+        if (!state.player) return "Enter your name to predict";
         if (match.status !== "SCHEDULED") return "Locked by match status";
         if (new Date(match.utc_date).getTime() <= Date.now()) return "Locked after kickoff";
         return "Open until kickoff";
@@ -1021,6 +979,18 @@
         if (!/^\d{1,2}$/.test(value)) return null;
         const score = Number(value);
         return Number.isInteger(score) && score >= 0 && score <= 99 ? score : null;
+      }
+
+      function normalizeDisplayName(value) {
+        const name = String(value ?? "").replace(/\s+/g, " ").trim();
+        if (name.length < 2 || name.length > 40) return "";
+        return name;
+      }
+
+      function randomToken() {
+        const bytes = new Uint8Array(32);
+        crypto.getRandomValues(bytes);
+        return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
       }
 
       function updateDateLabels() {

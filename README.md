@@ -1,13 +1,54 @@
 # World Cup 2026 Prediction App
 
-Static single-page app backed by Supabase Auth, Postgres, Realtime, and one Supabase Edge Function that fetches FIFA World Cup matches from football-data.org v4.
+No-email version: use `PUBLIC_NICKNAME_SETUP.md` for the current setup and deployment steps. Older Magic Link notes below are kept only for reference from the first version.
+
+Static single-page app backed by Supabase Postgres, Realtime, and one Supabase Edge Function that fetches FIFA World Cup matches from football-data.org v4.
+
+Current mode: public nickname access. Members open the single public URL, enter a display name, and predict without email. This is easier for phone access, but it is weaker than real authentication because identity is tied to browser storage on that device.
 
 ## Files
 
 - `index.html`: public single-page app.
 - `supabase/schema.sql`: tables, RLS, leaderboard RPCs, scoring RPC, Realtime publication.
+- `supabase/public-nickname-mode.sql`: migration that converts the database from Magic Link users to public nickname users.
 - `supabase/functions/fetch-matches/index.ts`: admin-only Edge Function.
 - `.env.example`: Edge Function secrets reference.
+
+## Public Nickname Mode Setup
+
+If you already ran `supabase/schema.sql`, run this migration next in Supabase SQL Editor:
+
+```sql
+-- paste the full contents of supabase/public-nickname-mode.sql
+```
+
+Verification SQL:
+
+```sql
+select public.participant_count();
+select * from public.leaderboard();
+
+select routine_name
+from information_schema.routines
+where routine_schema = 'public'
+  and routine_name in ('save_guest_prediction', 'leaderboard', 'participant_count')
+order by routine_name;
+```
+
+Expected:
+
+- `participant_count()` returns `0` before predictions exist.
+- `leaderboard()` returns no rows before predictions exist.
+- `save_guest_prediction`, `leaderboard`, and `participant_count` all exist.
+
+For the admin refresh button, set an admin PIN secret and deploy the function without JWT verification:
+
+```bash
+supabase secrets set ADMIN_PIN='choose-a-private-pin'
+supabase functions deploy fetch-matches --no-verify-jwt
+```
+
+Only share the PIN with the admin.
 
 ## Step 1: Supabase SQL Setup
 
@@ -81,12 +122,13 @@ supabase secrets set FOOTBALL_DATA_API_KEY=<football-data-key>
 supabase secrets set SUPABASE_URL=https://<project-ref>.supabase.co
 supabase secrets set SUPABASE_SERVICE_ROLE_KEY=<service-role-key>
 supabase secrets set WORLD_CUP_SEASON=2026
+supabase secrets set ADMIN_PIN=<private-admin-pin>
 ```
 
 Deploy:
 
 ```bash
-supabase functions deploy fetch-matches
+supabase functions deploy fetch-matches --no-verify-jwt
 ```
 
 Get a user access token after logging into the app. In the browser console:
@@ -103,7 +145,7 @@ Test the function:
 ```bash
 curl -i -X POST 'https://<project-ref>.supabase.co/functions/v1/fetch-matches' \
   -H 'apikey: <anon-key>' \
-  -H 'Authorization: Bearer <admin-user-access-token>' \
+  -H 'x-admin-pin: <private-admin-pin>' \
   -H 'Content-Type: application/json' \
   -d '{"season":2026}'
 ```
@@ -130,9 +172,9 @@ where season_year = 2026;
 
 Security verification:
 
-- Calling without `Authorization` should return `401`.
-- Calling with a non-admin logged-in user should return `403`.
-- Calling as an admin should fetch matches and recalculate points.
+- Calling without `x-admin-pin` should return `401`.
+- Calling with the wrong PIN should return `401`.
+- Calling with the correct PIN should fetch matches and recalculate points.
 
 ## Step 4: HTML Page Development
 
