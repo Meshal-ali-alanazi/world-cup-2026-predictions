@@ -547,6 +547,7 @@ function timingSafeEqual(left: string, right: string): boolean {
 }
 
 function normalizeStatus(status: string | null | undefined): string {
+  if (status === "TIMED") return "SCHEDULED";
   if (status && VALID_STATUSES.has(status)) return status;
   return "SCHEDULED";
 }

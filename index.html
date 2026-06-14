@@ -788,18 +788,27 @@
       function getStandingRow(rows, name) { const n = normalizeTeam(name); return rows.find((r) => normalizeTeam(r.team) === n); }
       function appStats() { return { predictions: state.leaderboard.reduce((s,r) => s + Number(r.predictions_count ?? 0), 0), finished: state.matches.filter(isFinishedMatch).length, open: state.matches.filter(isFutureScheduledMatch).length, top: state.leaderboard[0]?.display_name || "-" }; }
       function nextMatch() { return state.matches.find(isFutureScheduledMatch) || null; }
-      function isPredictionOpen(m) { return Boolean(state.player && m.status === "SCHEDULED" && new Date(m.utc_date).getTime() > Date.now()); }
-      function isFutureScheduledMatch(m) { return m.status === "SCHEDULED" && new Date(m.utc_date).getTime() > Date.now(); }
+      function isPredictionOpen(m) {
+        return Boolean(
+          state.player &&
+          isOpenPredictionStatus(m.status) &&
+          new Date(m.utc_date).getTime() > Date.now()
+        );
+      }
+      function isFutureScheduledMatch(m) {
+        return isOpenPredictionStatus(m.status) && new Date(m.utc_date).getTime() > Date.now();
+      }
       function isLiveMatch(m) { return ["IN_PLAY","PAUSED","EXTRA_TIME","PENALTY_SHOOTOUT"].includes(String(m.status || "").toUpperCase()); }
       function isFinishedMatch(m) { return hasFinalScore(m) || ["FINISHED","FULL_TIME","AWARDED"].includes(String(m.status || "").toUpperCase()); }
       function hasFinalScore(m) { return isScoreValue(m.score_home) && isScoreValue(m.score_away); }
       function isScoreValue(v) { return v !== null && v !== undefined && v !== "" && Number.isFinite(Number(v)); }
       function statusGroup(m) { if (isLiveMatch(m)) return "live"; if (isFinishedMatch(m)) return "finished"; return "upcoming"; }
-      function predictionLockReason(m) { if (!state.player) return t("enterNameToPredict"); if (m.status !== "SCHEDULED") return t("lockedByStatus"); if (new Date(m.utc_date).getTime() <= Date.now()) return t("lockedAfterKickoff"); return t("openUntilKickoff"); }
+      function predictionLockReason(m) { if (!state.player) return t("enterNameToPredict"); if (!isOpenPredictionStatus(m.status)) return t("lockedByStatus"); if (new Date(m.utc_date).getTime() <= Date.now()) return t("lockedAfterKickoff"); return t("openUntilKickoff"); }
       function isGroupStage(m) { const stage = normalizeStage(m.stage); return Boolean(extractGroup(m)) || stage.includes("group"); }
       function extractGroup(m) { const raw = String(m.group_name || "").toUpperCase(); return raw.match(/[A-L]$/)?.[0] || raw.match(/GROUP_?([A-L])/)?.[1] || teamMeta[m.home_team_name]?.[2] || null; }
       function stageLabel(m) { return isGroupStage(m) ? `${t("group")} ${extractGroup(m) || ""}`.trim() : String(m.stage || t("bracket")).replaceAll("_", " "); }
       function normalizeStage(v) { return String(v || "").toLowerCase().replaceAll("_", " ").replace(/[^a-z0-9 ]/g, "").trim(); }
+      function isOpenPredictionStatus(status) { return ["SCHEDULED", "TIMED"].includes(String(status || "").toUpperCase()); }
       function localizedTeamName(name) { if (!name || name === "TBD") return t("tbd"); return state.lang === "ar" ? teamMeta[name]?.[0] || name : name; }
       function teamFlag(name) { return teamMeta[name]?.[1] || "⚽"; }
       function normalizeTeam(name) { return String(name || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\bturkey\b/g, "turkiye").replace(/\busa\b/g, "united states").replace(/\bcote d'ivoire\b/g, "ivory coast").replace(/[^a-z0-9]+/g, " ").trim(); }
