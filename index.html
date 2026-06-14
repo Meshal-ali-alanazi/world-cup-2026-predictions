@@ -173,6 +173,11 @@
         padding: 18px;
       }
 
+      .tournament-header {
+        align-items: flex-end;
+        flex-wrap: wrap;
+      }
+
       .panel-title {
         display: flex;
         flex-direction: column;
@@ -223,18 +228,73 @@
         padding: 18px;
       }
 
+      .filter-tabs {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      .filter-tab {
+        min-height: 36px;
+        border: 1px solid var(--line);
+        background: #f7f9f7;
+        color: var(--muted);
+        padding: 0 12px;
+        font-size: 13px;
+      }
+
+      .filter-tab:hover:not(:disabled) {
+        background: #e7ece8;
+        color: var(--text);
+      }
+
+      .filter-tab.active {
+        border-color: rgba(15, 123, 99, 0.30);
+        background: var(--accent);
+        color: #fff;
+      }
+
       .matches {
         display: flex;
         flex-direction: column;
+        gap: 18px;
+        padding: 16px;
+      }
+
+      .match-date-section {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .date-heading {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
         gap: 12px;
-        padding: 14px;
+        color: var(--text);
+      }
+
+      .date-heading h3 {
+        margin: 0;
+        font-size: 16px;
+      }
+
+      .date-heading span {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
       }
 
       .match-card {
         border: 1px solid var(--line);
         border-radius: 8px;
-        background: #fff;
-        padding: 14px;
+        background:
+          linear-gradient(180deg, rgba(238, 244, 237, 0.58), transparent 120px),
+          #fff;
+        padding: 16px;
+        box-shadow: 0 10px 24px rgba(22, 30, 26, 0.05);
       }
 
       .match-main {
@@ -278,8 +338,21 @@
 
       .team-name {
         min-width: 0;
+        display: flex;
+        gap: 8px;
+        align-items: center;
         font-weight: 800;
         overflow-wrap: anywhere;
+      }
+
+      .team.away .team-name {
+        justify-content: flex-end;
+      }
+
+      .team-flag {
+        flex: 0 0 auto;
+        font-size: 18px;
+        line-height: 1;
       }
 
       .team-code {
@@ -307,6 +380,10 @@
         line-height: 1;
       }
 
+      .score-line.final {
+        font-size: 30px;
+      }
+
       .status {
         display: inline-flex;
         align-items: center;
@@ -330,12 +407,26 @@
         color: var(--warning);
       }
 
+      .status.finished {
+        background: #e9edf8;
+        color: #254887;
+      }
+
+      .countdown {
+        margin-top: 8px;
+        color: var(--accent-dark);
+        font-size: 12px;
+        font-weight: 900;
+      }
+
       .prediction-row {
         display: grid;
         grid-template-columns: 74px 18px 74px auto;
         gap: 10px;
         align-items: center;
         margin-top: 14px;
+        border-top: 1px solid var(--line);
+        padding-top: 14px;
       }
 
       .prediction-row input {
@@ -353,6 +444,41 @@
         grid-column: 1 / -1;
         color: var(--muted);
         font-size: 12px;
+      }
+
+      .match-details {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 14px;
+        border-top: 1px solid var(--line);
+        padding-top: 14px;
+      }
+
+      .detail-box {
+        min-width: 0;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.76);
+        padding: 10px;
+      }
+
+      .detail-label {
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 900;
+        text-transform: uppercase;
+      }
+
+      .detail-value {
+        margin-top: 4px;
+        font-size: 15px;
+        font-weight: 900;
+      }
+
+      .detail-value.points-value {
+        color: var(--accent-dark);
+        font-size: 20px;
       }
 
       .leaderboard-list {
@@ -430,6 +556,10 @@
         .session {
           justify-content: flex-start;
         }
+
+        .filter-tabs {
+          justify-content: flex-start;
+        }
       }
 
       @media (max-width: 640px) {
@@ -452,6 +582,10 @@
           text-align: left;
         }
 
+        .team.away .team-name {
+          justify-content: flex-start;
+        }
+
         .team.away .crest {
           grid-column: 1;
           grid-row: 1;
@@ -472,6 +606,10 @@
 
         .prediction-row button {
           grid-column: 1 / -1;
+        }
+
+        .match-details {
+          grid-template-columns: 1fr;
         }
       }
     </style>
@@ -508,10 +646,16 @@
 
       <section class="grid" style="margin-top: 20px;">
         <div class="panel">
-          <div class="panel-header">
+          <div class="panel-header tournament-header">
             <div class="panel-title">
-              <h2>Today's Matches</h2>
-              <span id="matchWindowLabel">Asia/Riyadh day window</span>
+              <h2>Tournament Matches</h2>
+              <span id="matchWindowLabel">All matches in Asia/Riyadh time</span>
+            </div>
+            <div id="matchFilterTabs" class="filter-tabs" role="tablist" aria-label="Match filters">
+              <button class="filter-tab active" type="button" data-match-filter="all" role="tab" aria-selected="true">All matches</button>
+              <button class="filter-tab" type="button" data-match-filter="today" role="tab" aria-selected="false">Today</button>
+              <button class="filter-tab" type="button" data-match-filter="upcoming" role="tab" aria-selected="false">Upcoming</button>
+              <button class="filter-tab" type="button" data-match-filter="finished" role="tab" aria-selected="false">Finished</button>
             </div>
           </div>
           <div id="matchesList" class="matches">
@@ -540,15 +684,81 @@
       const SUPABASE_URL = "https://ojoroqmmvbhbqpugbkhy.supabase.co";
       const SUPABASE_ANON_KEY = "sb_publishable_BeVUdF56wvidKtUD_lZIWg_iBMP5E_J";
       const MECCA_TIME_ZONE = "Asia/Riyadh";
-      const RIYADH_UTC_OFFSET_HOURS = 3;
       const WORLD_CUP_SEASON = 2026;
       const LOCAL_PLAYER_KEY = "wc2026_public_player";
+      const MATCH_FILTERS = {
+        ALL: "all",
+        TODAY: "today",
+        UPCOMING: "upcoming",
+        FINISHED: "finished",
+      };
+      const TEAM_FLAGS = {
+        Mexico: "🇲🇽",
+        "South Africa": "🇿🇦",
+        "Korea Republic": "🇰🇷",
+        "South Korea": "🇰🇷",
+        Czechia: "🇨🇿",
+        Canada: "🇨🇦",
+        "Bosnia and Herzegovina": "🇧🇦",
+        Qatar: "🇶🇦",
+        Switzerland: "🇨🇭",
+        Brazil: "🇧🇷",
+        Haiti: "🇭🇹",
+        Morocco: "🇲🇦",
+        Scotland: "\uD83C\uDFF4\uDB40\uDC67\uDB40\uDC62\uDB40\uDC73\uDB40\uDC63\uDB40\uDC74\uDB40\uDC7F",
+        Australia: "🇦🇺",
+        Paraguay: "🇵🇾",
+        Turkey: "🇹🇷",
+        Türkiye: "🇹🇷",
+        "United States": "🇺🇸",
+        USA: "🇺🇸",
+        "Côte d'Ivoire": "🇨🇮",
+        "Cote d'Ivoire": "🇨🇮",
+        "Ivory Coast": "🇨🇮",
+        Curacao: "🇨🇼",
+        Curaçao: "🇨🇼",
+        Ecuador: "🇪🇨",
+        Germany: "🇩🇪",
+        Japan: "🇯🇵",
+        Netherlands: "🇳🇱",
+        Sweden: "🇸🇪",
+        Tunisia: "🇹🇳",
+        Belgium: "🇧🇪",
+        Egypt: "🇪🇬",
+        Iran: "🇮🇷",
+        "IR Iran": "🇮🇷",
+        "New Zealand": "🇳🇿",
+        "Cape Verde": "🇨🇻",
+        "Cabo Verde": "🇨🇻",
+        "Saudi Arabia": "🇸🇦",
+        Spain: "🇪🇸",
+        Uruguay: "🇺🇾",
+        France: "🇫🇷",
+        Iraq: "🇮🇶",
+        Norway: "🇳🇴",
+        Senegal: "🇸🇳",
+        Algeria: "🇩🇿",
+        Argentina: "🇦🇷",
+        Austria: "🇦🇹",
+        Jordan: "🇯🇴",
+        Colombia: "🇨🇴",
+        "Congo DR": "🇨🇩",
+        "DR Congo": "🇨🇩",
+        Portugal: "🇵🇹",
+        Uzbekistan: "🇺🇿",
+        Croatia: "🇭🇷",
+        England: "\uD83C\uDFF4\uDB40\uDC67\uDB40\uDC62\uDB40\uDC65\uDB40\uDC6E\uDB40\uDC67\uDB40\uDC7F",
+        Ghana: "🇬🇭",
+        Panama: "🇵🇦",
+      };
 
       const state = {
         client: null,
         player: null,
         matches: [],
+        activeFilter: MATCH_FILTERS.ALL,
         channel: null,
+        countdownTimer: null,
         leaderboardTimer: null,
       };
 
@@ -570,11 +780,21 @@
           return;
         }
 
+        if (!window.supabase?.createClient) {
+          setMessage("Supabase JS did not load. Check CDN or network access.", "error");
+          els.magicLinkButton.disabled = true;
+          els.refreshButton.disabled = true;
+          els.matchesList.innerHTML = '<div class="empty">Supabase JS is unavailable.</div>';
+          els.leaderboardList.innerHTML = '<div class="empty">Supabase JS is unavailable.</div>';
+          return;
+        }
+
         state.client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         state.player = loadPlayer();
 
         await refreshAll();
         window.setInterval(loadMatches, 60000);
+        window.addEventListener("beforeunload", clearCountdownTimer);
       }
 
       function cacheElements() {
@@ -588,6 +808,7 @@
           "globalMessage",
           "leaderboardList",
           "magicLinkButton",
+          "matchFilterTabs",
           "matchesList",
           "matchWindowLabel",
           "participantCount",
@@ -605,10 +826,19 @@
         els.signOutButton.addEventListener("click", showNameForm);
         els.refreshButton.addEventListener("click", refreshAll);
         els.fetchMatchesButton.addEventListener("click", fetchOfficialResults);
+        els.matchFilterTabs.addEventListener("click", changeMatchFilter);
         els.matchesList.addEventListener("click", (event) => {
           const button = event.target.closest("button[data-save-match]");
           if (button) savePrediction(button.dataset.saveMatch);
         });
+      }
+
+      function changeMatchFilter(event) {
+        const button = event.target.closest("button[data-match-filter]");
+        if (!button) return;
+
+        state.activeFilter = button.dataset.matchFilter;
+        renderMatches();
       }
 
       function isConfigured() {
@@ -684,7 +914,6 @@
 
       async function loadMatches() {
         updateDateLabels();
-        const { startUtc, endUtc } = getMeccaTodayBoundsUtc();
 
         try {
           const { data: matches, error } = await state.client
@@ -692,8 +921,6 @@
             .select(
               "football_data_id,utc_date,status,stage,group_name,matchday,home_team_name,home_team_tla,home_team_crest,away_team_name,away_team_tla,away_team_crest,score_home,score_away",
             )
-            .gte("utc_date", startUtc.toISOString())
-            .lt("utc_date", endUtc.toISOString())
             .order("utc_date", { ascending: true });
 
           if (error) throw error;
@@ -706,6 +933,7 @@
 
           renderMatches();
         } catch (error) {
+          clearCountdownTimer();
           els.matchesList.innerHTML = `<div class="empty">${escapeHtml(error.message || "Could not load matches.")}</div>`;
         }
       }
@@ -793,26 +1021,58 @@
       }
 
       function renderMatches() {
+        updateFilterTabs();
+        clearCountdownTimer();
+
         if (state.matches.length === 0) {
-          els.matchesList.innerHTML = '<div class="empty">No World Cup matches are stored for today in Mecca time.</div>';
+          els.matchWindowLabel.textContent = "No matches loaded";
+          els.matchesList.innerHTML = '<div class="empty">No World Cup matches are stored yet.</div>';
           return;
         }
 
-        els.matchesList.innerHTML = state.matches.map(renderMatch).join("");
+        const visibleMatches = state.matches.filter(matchPassesActiveFilter);
+        els.matchWindowLabel.textContent = matchListSummary(visibleMatches, state.matches.length);
+
+        if (visibleMatches.length === 0) {
+          els.matchesList.innerHTML = `<div class="empty">${escapeHtml(emptyFilterMessage())}</div>`;
+          return;
+        }
+
+        els.matchesList.innerHTML = groupMatchesByMeccaDate(visibleMatches)
+          .map(([dateKey, matches]) => renderMatchGroup(dateKey, matches))
+          .join("");
+
+        resetCountdownTimer();
+      }
+
+      function renderMatchGroup(dateKey, matches) {
+        return `
+          <section class="match-date-section" aria-label="${escapeAttribute(formatDateHeading(dateKey))}">
+            <div class="date-heading">
+              <h3>${escapeHtml(formatDateHeading(dateKey))}</h3>
+              <span>${matches.length} ${matches.length === 1 ? "match" : "matches"}</span>
+            </div>
+            ${matches.map(renderMatch).join("")}
+          </section>
+        `;
       }
 
       function renderMatch(match) {
         const kickoff = new Date(match.utc_date);
         const isOpen = isPredictionOpen(match);
+        const finished = isFinishedMatch(match);
+        const finalScore = hasFinalScore(match);
         const prediction = match.prediction;
-        const statusClass = isOpen ? "open" : "locked";
-        const resultText = match.score_home === null || match.score_away === null
-          ? "v"
-          : `${match.score_home} - ${match.score_away}`;
-        const homeValue = prediction?.home_score ?? "";
-        const awayValue = prediction?.away_score ?? "";
+        const statusClass = isOpen ? "open" : finished ? "finished" : "locked";
+        const resultText = finalScore
+          ? `${Number(match.score_home)} - ${Number(match.score_away)}`
+          : "vs";
+        const statusText = finished ? "FINISHED" : match.status || "SCHEDULED";
         const lockReason = predictionLockReason(match);
         const groupStage = [match.stage, match.group_name].filter(Boolean).join(" / ");
+        const countdown = isFutureScheduledMatch(match)
+          ? `<div class="countdown" data-countdown="${escapeAttribute(match.football_data_id)}" data-kickoff-ms="${kickoff.getTime()}">${escapeHtml(formatCountdown(kickoff.getTime() - Date.now()))}</div>`
+          : "";
 
         return `
           <article class="match-card">
@@ -820,43 +1080,80 @@
               ${renderTeam(match.home_team_name, match.home_team_tla, match.home_team_crest, "home")}
               <div class="score-box">
                 <div class="kickoff">${escapeHtml(formatMeccaTime(kickoff))}</div>
-                <div class="score-line">${escapeHtml(resultText)}</div>
-                <div class="status ${statusClass}">${escapeHtml(match.status)}</div>
+                <div class="score-line ${finalScore ? "final" : ""}">${escapeHtml(resultText)}</div>
+                <div class="status ${statusClass}">${escapeHtml(statusText)}</div>
+                ${countdown}
               </div>
               ${renderTeam(match.away_team_name, match.away_team_tla, match.away_team_crest, "away")}
             </div>
-            <div class="prediction-row">
-              <input
-                data-home-score="${match.football_data_id}"
-                type="number"
-                min="0"
-                max="99"
-                step="1"
-                inputmode="numeric"
-                placeholder="Home"
-                value="${escapeAttribute(homeValue)}"
-                ${isOpen ? "" : "disabled"}
-              >
-              <span class="dash">-</span>
-              <input
-                data-away-score="${match.football_data_id}"
-                type="number"
-                min="0"
-                max="99"
-                step="1"
-                inputmode="numeric"
-                placeholder="Away"
-                value="${escapeAttribute(awayValue)}"
-                ${isOpen ? "" : "disabled"}
-              >
-              <button type="button" data-save-match="${match.football_data_id}" ${isOpen ? "" : "disabled"}>Save</button>
-              <div class="prediction-note">
-                ${escapeHtml(groupStage || "World Cup 2026")}
-                ${prediction ? ` · Your points: ${prediction.points}` : ""}
-                · ${escapeHtml(lockReason)}
-              </div>
-            </div>
+            ${isOpen
+              ? renderPredictionForm(match, prediction, groupStage, lockReason)
+              : renderMatchDetails(match, prediction, groupStage, lockReason, finished)}
           </article>
+        `;
+      }
+
+      function renderPredictionForm(match, prediction, groupStage, lockReason) {
+        const homeValue = prediction?.home_score ?? "";
+        const awayValue = prediction?.away_score ?? "";
+        const matchId = escapeAttribute(match.football_data_id);
+
+        return `
+          <div class="prediction-row">
+            <input
+              data-home-score="${matchId}"
+              type="number"
+              min="0"
+              max="99"
+              step="1"
+              inputmode="numeric"
+              placeholder="Home"
+              value="${escapeAttribute(homeValue)}"
+            >
+            <span class="dash">-</span>
+            <input
+              data-away-score="${matchId}"
+              type="number"
+              min="0"
+              max="99"
+              step="1"
+              inputmode="numeric"
+              placeholder="Away"
+              value="${escapeAttribute(awayValue)}"
+            >
+            <button type="button" data-save-match="${matchId}">Save</button>
+            <div class="prediction-note">
+              ${escapeHtml(groupStage || "World Cup 2026")}
+              ${prediction ? ` · Saved: ${escapeHtml(formatPrediction(prediction))}` : ""}
+              · ${escapeHtml(lockReason)}
+            </div>
+          </div>
+        `;
+      }
+
+      function renderMatchDetails(match, prediction, groupStage, lockReason, finished) {
+        const firstLabel = finished ? "Final score" : "Match";
+        const firstValue = finished && hasFinalScore(match)
+          ? `${Number(match.score_home)} - ${Number(match.score_away)}`
+          : groupStage || "World Cup 2026";
+        const predictionText = prediction ? formatPrediction(prediction) : "No saved prediction";
+        const points = prediction?.points ?? 0;
+
+        return `
+          <div class="match-details">
+            <div class="detail-box">
+              <div class="detail-label">${escapeHtml(firstLabel)}</div>
+              <div class="detail-value">${escapeHtml(firstValue)}</div>
+            </div>
+            <div class="detail-box">
+              <div class="detail-label">Your prediction</div>
+              <div class="detail-value">${escapeHtml(predictionText)}</div>
+            </div>
+            <div class="detail-box">
+              <div class="detail-label">${finished ? "Points gained" : "Status"}</div>
+              <div class="detail-value ${finished ? "points-value" : ""}">${escapeHtml(finished ? points : lockReason)}</div>
+            </div>
+          </div>
         `;
       }
 
@@ -864,15 +1161,17 @@
         const safeName = escapeHtml(name || "TBD");
         const safeTla = escapeHtml(tla || "");
         const fallback = escapeHtml((tla || name || "TBD").slice(0, 3).toUpperCase());
+        const flag = escapeHtml(getTeamFlag(name));
         const image = crest
           ? `<img src="${escapeAttribute(crest)}" alt="${safeName} crest" loading="lazy" onerror="this.outerHTML='${escapeAttribute(fallback)}'">`
           : fallback;
+        const nameHtml = `<div class="team-name"><span class="team-flag" aria-hidden="true">${flag}</span><span>${safeName}</span></div>`;
 
         if (side === "away") {
           return `
             <div class="team away">
               <div>
-                <div class="team-name">${safeName}</div>
+                ${nameHtml}
                 <div class="team-code">${safeTla}</div>
               </div>
               <div class="crest">${image}</div>
@@ -884,11 +1183,137 @@
           <div class="team">
             <div class="crest">${image}</div>
             <div>
-              <div class="team-name">${safeName}</div>
+              ${nameHtml}
               <div class="team-code">${safeTla}</div>
             </div>
           </div>
         `;
+      }
+
+      function updateFilterTabs() {
+        els.matchFilterTabs.querySelectorAll("button[data-match-filter]").forEach((button) => {
+          const active = button.dataset.matchFilter === state.activeFilter;
+          button.classList.toggle("active", active);
+          button.setAttribute("aria-selected", active ? "true" : "false");
+        });
+      }
+
+      function matchPassesActiveFilter(match) {
+        if (state.activeFilter === MATCH_FILTERS.TODAY) {
+          return getMeccaDateKey(new Date(match.utc_date)) === getMeccaDateKey(new Date());
+        }
+
+        if (state.activeFilter === MATCH_FILTERS.UPCOMING) {
+          return isFutureScheduledMatch(match);
+        }
+
+        if (state.activeFilter === MATCH_FILTERS.FINISHED) {
+          return isFinishedMatch(match);
+        }
+
+        return true;
+      }
+
+      function groupMatchesByMeccaDate(matches) {
+        const groups = new Map();
+        matches.forEach((match) => {
+          const key = getMeccaDateKey(new Date(match.utc_date));
+          if (!groups.has(key)) groups.set(key, []);
+          groups.get(key).push(match);
+        });
+        return Array.from(groups.entries());
+      }
+
+      function matchListSummary(visibleMatches, totalMatches) {
+        const label = {
+          [MATCH_FILTERS.ALL]: "All matches",
+          [MATCH_FILTERS.TODAY]: "Today",
+          [MATCH_FILTERS.UPCOMING]: "Upcoming",
+          [MATCH_FILTERS.FINISHED]: "Finished",
+        }[state.activeFilter] || "All matches";
+
+        return `${label}: ${visibleMatches.length} of ${totalMatches} matches · Asia/Riyadh`;
+      }
+
+      function emptyFilterMessage() {
+        if (state.activeFilter === MATCH_FILTERS.TODAY) return "No matches are scheduled for today in Mecca time.";
+        if (state.activeFilter === MATCH_FILTERS.UPCOMING) return "No future scheduled matches are currently open.";
+        if (state.activeFilter === MATCH_FILTERS.FINISHED) return "No finished matches are available yet.";
+        return "No matches match this filter.";
+      }
+
+      function isFutureScheduledMatch(match) {
+        return match.status === "SCHEDULED" && new Date(match.utc_date).getTime() > Date.now();
+      }
+
+      function isFinishedMatch(match) {
+        return hasFinalScore(match) || ["FINISHED", "FULL_TIME", "AWARDED"].includes(String(match.status || "").toUpperCase());
+      }
+
+      function hasFinalScore(match) {
+        return isScoreValue(match.score_home) && isScoreValue(match.score_away);
+      }
+
+      function isScoreValue(value) {
+        return value !== null && value !== undefined && value !== "" && Number.isFinite(Number(value));
+      }
+
+      function formatPrediction(prediction) {
+        return `${Number(prediction.home_score)} - ${Number(prediction.away_score)}`;
+      }
+
+      function resetCountdownTimer() {
+        clearCountdownTimer();
+        const hadExpiredCountdown = updateCountdowns();
+
+        if (hadExpiredCountdown) return;
+
+        if (document.querySelector("[data-countdown]")) {
+          state.countdownTimer = window.setInterval(updateCountdowns, 1000);
+        }
+      }
+
+      function clearCountdownTimer() {
+        if (!state.countdownTimer) return;
+        window.clearInterval(state.countdownTimer);
+        state.countdownTimer = null;
+      }
+
+      function updateCountdowns() {
+        const countdowns = Array.from(document.querySelectorAll("[data-countdown]"));
+        let hasExpired = false;
+
+        countdowns.forEach((node) => {
+          const kickoffMs = Number(node.dataset.kickoffMs);
+          const remainingMs = kickoffMs - Date.now();
+
+          if (!Number.isFinite(kickoffMs) || remainingMs <= 0) {
+            hasExpired = true;
+            node.textContent = "Kickoff reached";
+            return;
+          }
+
+          node.textContent = formatCountdown(remainingMs);
+        });
+
+        if (hasExpired) {
+          renderMatches();
+        }
+
+        return hasExpired;
+      }
+
+      function formatCountdown(milliseconds) {
+        const totalSeconds = Math.max(0, Math.floor(milliseconds / 1000));
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        return `Starts in ${hours}h ${minutes}m ${seconds}s`;
+      }
+
+      function getTeamFlag(name) {
+        const teamName = String(name || "").trim();
+        return TEAM_FLAGS[teamName] || "⚽";
       }
 
       function renderLeaderboard(rows) {
@@ -1018,38 +1443,45 @@
       }
 
       function updateDateLabels() {
-        const { startUtc, endUtc, dateLabel } = getMeccaTodayBoundsUtc();
-        els.dateLabel.textContent = `${dateLabel} in Mecca time`;
-        els.matchWindowLabel.textContent = `${startUtc.toISOString()} to ${endUtc.toISOString()} UTC`;
+        els.dateLabel.textContent = `${formatDateHeading(getMeccaDateKey(new Date()))} in Mecca time`;
+        els.matchWindowLabel.textContent = "All matches in Asia/Riyadh time";
       }
 
-      function getMeccaTodayBoundsUtc(reference = new Date()) {
-        const parts = new Intl.DateTimeFormat("en-CA", {
+      function getMeccaDateKey(date) {
+        return new Intl.DateTimeFormat("en-CA", {
           timeZone: MECCA_TIME_ZONE,
           year: "numeric",
           month: "2-digit",
           day: "2-digit",
-        }).formatToParts(reference);
+        }).format(date);
+      }
 
-        const values = Object.fromEntries(parts.filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
-        const year = Number(values.year);
-        const month = Number(values.month);
-        const day = Number(values.day);
-        const startUtc = new Date(Date.UTC(year, month - 1, day, -RIYADH_UTC_OFFSET_HOURS, 0, 0, 0));
-        const endUtc = new Date(startUtc.getTime() + 24 * 60 * 60 * 1000);
+      function formatDateHeading(dateKey) {
+        const todayKey = getMeccaDateKey(new Date());
+        if (dateKey === todayKey) return "Today";
+        if (dateKey === shiftDateKey(todayKey, 1)) return "Tomorrow";
 
-        return {
-          startUtc,
-          endUtc,
-          dateLabel: `${values.year}-${values.month}-${values.day}`,
-        };
+        const [year, month, day] = dateKey.split("-").map(Number);
+        return new Intl.DateTimeFormat("en-GB", {
+          timeZone: "UTC",
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+        }).format(new Date(Date.UTC(year, month - 1, day, 12))).replace(",", "");
+      }
+
+      function shiftDateKey(dateKey, days) {
+        const [year, month, day] = dateKey.split("-").map(Number);
+        const shifted = new Date(Date.UTC(year, month - 1, day + days, 12));
+        const shiftedYear = shifted.getUTCFullYear();
+        const shiftedMonth = String(shifted.getUTCMonth() + 1).padStart(2, "0");
+        const shiftedDay = String(shifted.getUTCDate()).padStart(2, "0");
+        return `${shiftedYear}-${shiftedMonth}-${shiftedDay}`;
       }
 
       function formatMeccaTime(date) {
         return new Intl.DateTimeFormat("en", {
           timeZone: MECCA_TIME_ZONE,
-          month: "short",
-          day: "2-digit",
           hour: "2-digit",
           minute: "2-digit",
         }).format(date);
