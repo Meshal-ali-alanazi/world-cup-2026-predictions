@@ -365,7 +365,7 @@
       const WORLD_CUP_SEASON = 2026;
       const LOCAL_PLAYER_KEY = "wc2026_public_player";
       const LOCAL_LANG_KEY = "wc2026_lang";
-      const DATE_TIME_ZONE = Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Riyadh";
+      const DATE_TIME_ZONE = "Asia/Riyadh";
       const BASIC_MATCH_SELECT = "football_data_id,utc_date,status,stage,group_name,matchday,home_team_name,home_team_tla,away_team_name,away_team_tla,score_home,score_away,raw";
       const EXTENDED_MATCH_SELECT = `${BASIC_MATCH_SELECT},match_number,stadium,city,country,home_penalties,away_penalties,winner`;
 
@@ -462,6 +462,7 @@
         els.refreshButton.addEventListener("click", refreshAll);
         els.signOutButton.addEventListener("click", showNameForm);
         els.languageButton.addEventListener("click", toggleLanguage);
+        els.mainNav.addEventListener("click", handleClick);
         els.closeModalButton.addEventListener("click", closePredictionModal);
         els.predictionModal.addEventListener("click", (event) => { if (event.target === els.predictionModal) closePredictionModal(); });
         els.pageRoot.addEventListener("click", handleClick);
