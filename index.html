@@ -1,1520 +1,831 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" dir="ltr">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>World Cup 2026 Predictions</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
       :root {
-        color-scheme: light;
-        --bg: #f6f7f4;
-        --panel: #ffffff;
-        --panel-soft: #eef4ed;
-        --text: #17201b;
-        --muted: #65716a;
-        --line: #d9e0db;
-        --accent: #0f7b63;
-        --accent-dark: #0b5948;
-        --danger: #bb3d2b;
-        --warning: #a66a00;
-        --shadow: 0 16px 40px rgba(22, 30, 26, 0.08);
+        color-scheme: dark;
+        --bg: #0a1628;
+        --bg-deep: #06101f;
+        --panel: #0f1f3a;
+        --panel-2: #1e3a5f;
+        --gold: #ffd700;
+        --text: #ffffff;
+        --muted: #94a3b8;
+        --line: rgba(255, 255, 255, 0.13);
+        --success: #22c55e;
+        --danger: #ef4444;
+        --warning: #f59e0b;
+        --info: #38bdf8;
+        --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
       }
 
-      * {
-        box-sizing: border-box;
-      }
+      * { box-sizing: border-box; }
 
       body {
         margin: 0;
         min-height: 100vh;
         background:
-          linear-gradient(180deg, rgba(15, 123, 99, 0.10), transparent 360px),
-          var(--bg);
+          radial-gradient(circle at 18% 0%, rgba(255, 215, 0, 0.16), transparent 28rem),
+          radial-gradient(circle at 80% 18%, rgba(56, 189, 248, 0.12), transparent 30rem),
+          linear-gradient(180deg, var(--bg), var(--bg-deep));
         color: var(--text);
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-family: Inter, Cairo, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       }
 
-      button,
-      input {
-        font: inherit;
-      }
+      body[dir="rtl"] { font-family: Cairo, Inter, ui-sans-serif, system-ui, sans-serif; }
+      button, input, select { font: inherit; }
 
       button {
-        border: 0;
-        border-radius: 6px;
-        background: var(--accent);
-        color: #fff;
-        cursor: pointer;
-        font-weight: 700;
         min-height: 42px;
+        border: 0;
+        border-radius: 8px;
+        background: var(--gold);
+        color: #111827;
+        cursor: pointer;
+        font-weight: 900;
         padding: 0 16px;
-        transition: background 0.16s ease, transform 0.16s ease;
+        transition: transform 0.16s ease, background 0.16s ease, border-color 0.16s ease;
       }
 
-      button:hover:not(:disabled) {
-        background: var(--accent-dark);
-        transform: translateY(-1px);
-      }
+      button:hover:not(:disabled) { background: #ffe45c; transform: translateY(-1px); }
+      button:disabled { cursor: not-allowed; opacity: 0.55; }
 
-      button:disabled {
-        cursor: not-allowed;
-        opacity: 0.54;
-      }
-
-      button.secondary {
-        background: #e7ece8;
+      button.secondary, button.nav-button {
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.07);
         color: var(--text);
       }
 
-      button.secondary:hover:not(:disabled) {
-        background: #d8e1db;
+      button.secondary:hover:not(:disabled), button.nav-button:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.12);
       }
 
-      button.danger {
-        background: var(--danger);
+      button.nav-button.active {
+        border-color: rgba(255, 215, 0, 0.65);
+        background: rgba(255, 215, 0, 0.16);
+        color: var(--gold);
       }
 
-      input {
+      input, select {
         width: 100%;
         min-height: 42px;
         border: 1px solid var(--line);
-        border-radius: 6px;
-        background: #fff;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.07);
         color: var(--text);
-        padding: 0 12px;
         outline: none;
+        padding: 0 12px;
       }
 
-      input:focus {
-        border-color: var(--accent);
-        box-shadow: 0 0 0 3px rgba(15, 123, 99, 0.14);
-      }
-
-      input:disabled {
-        background: #f1f3f1;
-        color: var(--muted);
-      }
+      select option { background: var(--panel); color: var(--text); }
+      input:focus, select:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.16); }
+      input:disabled { color: var(--muted); background: rgba(255, 255, 255, 0.04); }
 
       .shell {
-        width: min(1180px, calc(100% - 32px));
+        width: min(1240px, calc(100% - 32px));
         margin: 0 auto;
-        padding: 28px 0 48px;
+        padding: 24px 0 48px;
       }
 
       .topbar {
         display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 20px;
-        align-items: center;
-        padding-bottom: 24px;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 18px;
+        align-items: start;
+        margin-bottom: 18px;
       }
 
-      .brand {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-      }
+      .brand { display: grid; gap: 7px; }
+      .brand-mark { color: var(--gold); font-size: 13px; font-weight: 900; text-transform: uppercase; }
+      .brand h1 { margin: 0; max-width: 760px; font-size: clamp(34px, 5vw, 66px); line-height: 0.96; letter-spacing: 0; }
+      .brand p { margin: 0; max-width: 720px; color: var(--muted); font-size: 15px; }
 
-      .brand h1 {
-        margin: 0;
-        font-size: clamp(30px, 4vw, 52px);
-        line-height: 1;
-        letter-spacing: 0;
-      }
-
-      .brand p {
-        margin: 0;
-        color: var(--muted);
-        font-size: 15px;
-      }
-
-      .session {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        justify-content: flex-end;
-        flex-wrap: wrap;
-      }
+      .top-actions { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
 
       .pill {
         display: inline-flex;
         align-items: center;
-        min-height: 34px;
+        min-height: 36px;
         border: 1px solid var(--line);
         border-radius: 999px;
-        background: rgba(255, 255, 255, 0.72);
+        background: rgba(255, 255, 255, 0.06);
         color: var(--muted);
         padding: 0 12px;
         font-size: 13px;
-        font-weight: 700;
+        font-weight: 800;
       }
 
-      .grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) 360px;
-        gap: 20px;
-        align-items: start;
-      }
-
-      .panel {
-        background: var(--panel);
+      .nav {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
         border: 1px solid var(--line);
-        border-radius: 8px;
+        border-radius: 12px;
+        background: rgba(6, 16, 31, 0.88);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(12px);
+        padding: 8px;
+        margin-bottom: 18px;
+      }
+
+      .nav-button { flex: 0 0 auto; min-height: 38px; padding: 0 13px; font-size: 13px; }
+
+      .message {
+        display: none;
+        margin-bottom: 16px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.08);
+        padding: 13px 15px;
+        font-size: 14px;
+      }
+
+      .message.show { display: block; }
+      .message.error { border-color: rgba(239, 68, 68, 0.42); background: rgba(239, 68, 68, 0.12); }
+      .message.success { border-color: rgba(34, 197, 94, 0.42); background: rgba(34, 197, 94, 0.12); }
+
+      .panel, .card {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: rgba(15, 31, 58, 0.9);
         box-shadow: var(--shadow);
       }
 
       .panel-header {
         display: flex;
-        align-items: center;
         justify-content: space-between;
-        gap: 16px;
+        gap: 14px;
+        align-items: flex-start;
         border-bottom: 1px solid var(--line);
-        padding: 18px;
-      }
-
-      .tournament-header {
-        align-items: flex-end;
-        flex-wrap: wrap;
-      }
-
-      .panel-title {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-      }
-
-      .panel-title h2 {
-        margin: 0;
-        font-size: 18px;
-      }
-
-      .panel-title span {
-        color: var(--muted);
-        font-size: 13px;
-      }
-
-      .message {
-        display: none;
-        margin-bottom: 16px;
-        border-radius: 8px;
-        padding: 12px 14px;
-        background: var(--panel-soft);
-        color: var(--text);
-        border: 1px solid var(--line);
-        font-size: 14px;
-      }
-
-      .message.show {
-        display: block;
-      }
-
-      .message.error {
-        background: #fff0ed;
-        border-color: #f0c1b8;
-        color: #7d2619;
-      }
-
-      .message.success {
-        background: #edf8f1;
-        border-color: #bde3ca;
-        color: #174f2a;
-      }
-
-      .auth-box {
-        display: grid;
-        grid-template-columns: minmax(220px, 1fr) auto;
-        gap: 10px;
-        padding: 18px;
-      }
-
-      .filter-tabs {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        justify-content: flex-end;
-      }
-
-      .filter-tab {
-        min-height: 36px;
-        border: 1px solid var(--line);
-        background: #f7f9f7;
-        color: var(--muted);
-        padding: 0 12px;
-        font-size: 13px;
-      }
-
-      .filter-tab:hover:not(:disabled) {
-        background: #e7ece8;
-        color: var(--text);
-      }
-
-      .filter-tab.active {
-        border-color: rgba(15, 123, 99, 0.30);
-        background: var(--accent);
-        color: #fff;
-      }
-
-      .matches {
-        display: flex;
-        flex-direction: column;
-        gap: 18px;
         padding: 16px;
       }
 
-      .match-date-section {
+      .panel-title { display: grid; gap: 4px; }
+      .panel-title h2, .panel-title h3 { margin: 0; }
+      .panel-title span { color: var(--muted); font-size: 13px; }
+      .panel-body { padding: 16px; }
+
+      .auth-box { display: grid; grid-template-columns: minmax(220px, 1fr) auto; gap: 10px; }
+
+      .hero { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.7fr); gap: 16px; }
+
+      .hero-card {
+        min-height: 330px;
+        border: 1px solid rgba(255, 215, 0, 0.28);
+        border-radius: 12px;
+        background:
+          linear-gradient(135deg, rgba(255, 215, 0, 0.18), rgba(30, 58, 95, 0.08)),
+          linear-gradient(180deg, rgba(15, 31, 58, 0.96), rgba(6, 16, 31, 0.92));
         display: flex;
         flex-direction: column;
-        gap: 10px;
-      }
-
-      .date-heading {
-        display: flex;
-        align-items: baseline;
         justify-content: space-between;
-        gap: 12px;
-        color: var(--text);
+        padding: clamp(22px, 4vw, 42px);
+        box-shadow: var(--shadow);
       }
 
-      .date-heading h3 {
-        margin: 0;
-        font-size: 16px;
-      }
+      .hero-card h2 { margin: 0; font-size: clamp(32px, 5vw, 60px); line-height: 1; letter-spacing: 0; }
+      .hero-card p { max-width: 650px; margin: 14px 0 0; color: var(--muted); }
+      .hero-actions, .inline-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 
-      .date-heading span {
-        color: var(--muted);
-        font-size: 12px;
-        font-weight: 800;
-      }
+      .stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+      .stat { border: 1px solid var(--line); border-radius: 12px; background: rgba(255, 255, 255, 0.06); padding: 14px; }
+      .stat-label { color: var(--muted); font-size: 12px; font-weight: 900; text-transform: uppercase; }
+      .stat-value { margin-top: 6px; color: var(--gold); font-size: 27px; font-weight: 900; }
+
+      .toolbar { display: grid; grid-template-columns: repeat(5, minmax(120px, 1fr)); gap: 10px; }
+      .stack, .match-list { display: grid; gap: 14px; }
+      .grid-2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 0.48fr); gap: 16px; }
+      .groups-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+
+      .date-section { display: grid; gap: 10px; }
+      .date-heading { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+      .date-heading h3 { margin: 0; color: var(--gold); font-size: 17px; }
+      .date-heading span { color: var(--muted); font-size: 12px; font-weight: 900; }
 
       .match-card {
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        background:
-          linear-gradient(180deg, rgba(238, 244, 237, 0.58), transparent 120px),
-          #fff;
-        padding: 16px;
-        box-shadow: 0 10px 24px rgba(22, 30, 26, 0.05);
-      }
-
-      .match-main {
         display: grid;
-        grid-template-columns: 1fr auto 1fr;
         gap: 14px;
-        align-items: center;
-      }
-
-      .team {
-        display: grid;
-        grid-template-columns: 42px minmax(0, 1fr);
-        gap: 10px;
-        align-items: center;
-      }
-
-      .team.away {
-        grid-template-columns: minmax(0, 1fr) 42px;
-        text-align: right;
-      }
-
-      .crest {
-        width: 42px;
-        height: 42px;
-        border-radius: 50%;
         border: 1px solid var(--line);
-        background: #f3f5f3;
-        display: grid;
-        place-items: center;
-        color: var(--muted);
-        font-size: 11px;
-        font-weight: 800;
-        overflow: hidden;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.045);
+        padding: 16px;
       }
 
-      .crest img {
-        width: 34px;
-        height: 34px;
-        object-fit: contain;
-      }
+      .match-top { display: flex; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 12px; font-weight: 800; }
+      .match-main { display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: center; }
 
-      .team-name {
-        min-width: 0;
-        display: flex;
-        gap: 8px;
-        align-items: center;
-        font-weight: 800;
-        overflow-wrap: anywhere;
-      }
+      .team { min-width: 0; display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 10px; align-items: center; }
+      .team.away { grid-template-columns: minmax(0, 1fr) 48px; text-align: end; }
+      .flag-badge { width: 48px; height: 48px; border: 1px solid var(--line); border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, 0.08); font-size: 25px; }
+      .team-name { font-size: 17px; font-weight: 900; overflow-wrap: anywhere; }
+      .team-alt { color: var(--muted); font-size: 12px; font-weight: 700; margin-top: 2px; }
 
-      .team.away .team-name {
-        justify-content: flex-end;
-      }
-
-      .team-flag {
-        flex: 0 0 auto;
-        font-size: 18px;
-        line-height: 1;
-      }
-
-      .team-code {
-        margin-top: 2px;
-        color: var(--muted);
-        font-size: 12px;
-        font-weight: 700;
-      }
-
-      .score-box {
-        min-width: 150px;
-        text-align: center;
-      }
-
-      .kickoff {
-        color: var(--muted);
-        font-size: 12px;
-        font-weight: 700;
-        margin-bottom: 6px;
-      }
-
-      .score-line {
-        font-size: 26px;
-        font-weight: 900;
-        line-height: 1;
-      }
-
-      .score-line.final {
-        font-size: 30px;
-      }
+      .score-box { min-width: 150px; text-align: center; }
+      .score-line { color: var(--gold); font-size: 32px; font-weight: 900; line-height: 1; }
 
       .status {
         display: inline-flex;
         align-items: center;
-        min-height: 24px;
+        min-height: 25px;
         margin-top: 8px;
-        padding: 0 8px;
         border-radius: 999px;
-        background: #e8efeb;
-        color: var(--muted);
+        padding: 0 9px;
         font-size: 11px;
         font-weight: 900;
-      }
-
-      .status.open {
-        background: #e2f4ea;
-        color: #126238;
-      }
-
-      .status.locked {
-        background: #fff2de;
-        color: var(--warning);
-      }
-
-      .status.finished {
-        background: #e9edf8;
-        color: #254887;
-      }
-
-      .countdown {
-        margin-top: 8px;
-        color: var(--accent-dark);
-        font-size: 12px;
-        font-weight: 900;
-      }
-
-      .prediction-row {
-        display: grid;
-        grid-template-columns: 74px 18px 74px auto;
-        gap: 10px;
-        align-items: center;
-        margin-top: 14px;
-        border-top: 1px solid var(--line);
-        padding-top: 14px;
-      }
-
-      .prediction-row input {
-        text-align: center;
-        font-weight: 800;
-      }
-
-      .dash {
+        background: rgba(148, 163, 184, 0.16);
         color: var(--muted);
-        font-weight: 900;
-        text-align: center;
       }
 
-      .prediction-note {
-        grid-column: 1 / -1;
-        color: var(--muted);
-        font-size: 12px;
-      }
+      .status.open { background: rgba(34, 197, 94, 0.16); color: var(--success); }
+      .status.live { background: rgba(34, 197, 94, 0.22); color: var(--success); animation: pulse 1.4s infinite; }
+      .status.finished { background: rgba(56, 189, 248, 0.16); color: var(--info); }
+      @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.4); } 50% { box-shadow: 0 0 0 7px rgba(34,197,94,0); } }
 
-      .match-details {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 10px;
-        margin-top: 14px;
-        border-top: 1px solid var(--line);
-        padding-top: 14px;
-      }
+      .countdown { margin-top: 8px; color: var(--gold); font-size: 12px; font-weight: 900; }
 
-      .detail-box {
-        min-width: 0;
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        background: rgba(255, 255, 255, 0.76);
-        padding: 10px;
-      }
+      .prediction-row { display: grid; grid-template-columns: 82px 20px 82px auto; gap: 10px; align-items: center; border-top: 1px solid var(--line); padding-top: 14px; }
+      .prediction-row input { text-align: center; font-weight: 900; }
+      .prediction-note, .muted { color: var(--muted); font-size: 13px; }
+      .prediction-note { grid-column: 1 / -1; }
 
-      .detail-label {
-        color: var(--muted);
-        font-size: 11px;
-        font-weight: 900;
-        text-transform: uppercase;
-      }
+      .detail-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; border-top: 1px solid var(--line); padding-top: 14px; }
+      .detail-box { min-width: 0; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,0.05); padding: 10px; }
+      .detail-label { color: var(--muted); font-size: 11px; font-weight: 900; text-transform: uppercase; }
+      .detail-value { margin-top: 4px; font-weight: 900; }
 
-      .detail-value {
-        margin-top: 4px;
-        font-size: 15px;
-        font-weight: 900;
-      }
+      .leader-row { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; gap: 12px; align-items: center; border-bottom: 1px solid var(--line); padding: 12px 0; }
+      .leader-row:last-child { border-bottom: 0; }
+      .rank { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,215,0,0.13); color: var(--gold); font-weight: 900; }
+      .leader-name { font-weight: 900; overflow-wrap: anywhere; }
+      .leader-meta { margin-top: 2px; color: var(--muted); font-size: 12px; }
+      .points { color: var(--gold); font-size: 22px; font-weight: 900; }
 
-      .detail-value.points-value {
-        color: var(--accent-dark);
-        font-size: 20px;
-      }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { border-bottom: 1px solid var(--line); padding: 8px 6px; text-align: start; font-size: 13px; }
+      th { color: var(--muted); font-size: 11px; text-transform: uppercase; }
+      tr:last-child td { border-bottom: 0; }
+      .qualified td:first-child { color: var(--success); font-weight: 900; }
+      .third-place td:first-child { color: var(--warning); font-weight: 900; }
 
-      .leaderboard-list {
-        padding: 8px 14px 14px;
-      }
+      .bracket { display: grid; grid-template-columns: repeat(6, minmax(220px, 1fr)); gap: 12px; overflow-x: auto; padding-bottom: 6px; }
+      .round { min-width: 220px; display: grid; gap: 10px; align-content: start; }
+      .round h3 { margin: 0; color: var(--gold); font-size: 15px; }
+      .bracket-match { border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,0.055); padding: 10px; font-size: 13px; }
 
-      .leader-row {
-        display: grid;
-        grid-template-columns: 34px 1fr auto;
-        gap: 10px;
-        align-items: center;
-        padding: 10px 0;
-        border-bottom: 1px solid var(--line);
-      }
+      .modal { position: fixed; inset: 0; z-index: 30; display: none; place-items: center; background: rgba(0,0,0,0.68); padding: 16px; }
+      .modal.show { display: grid; }
+      .modal-card { width: min(640px, 100%); max-height: min(760px, calc(100vh - 32px)); overflow: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); box-shadow: var(--shadow); }
 
-      .leader-row:last-child {
-        border-bottom: 0;
-      }
+      .empty, .loading { color: var(--muted); padding: 22px; text-align: center; }
+      .hide { display: none !important; }
 
-      .rank {
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        background: #e8efeb;
-        color: var(--muted);
-        display: grid;
-        place-items: center;
-        font-size: 12px;
-        font-weight: 900;
-      }
-
-      .leader-name {
-        font-weight: 800;
-        overflow-wrap: anywhere;
-      }
-
-      .leader-meta {
-        color: var(--muted);
-        font-size: 12px;
-        margin-top: 2px;
-      }
-
-      .points {
-        font-size: 18px;
-        font-weight: 900;
-      }
-
-      .admin {
-        display: none;
-        border-top: 1px solid var(--line);
-        padding: 14px;
-      }
-
-      .admin.show {
-        display: block;
-      }
-
-      .empty,
-      .loading {
-        padding: 22px;
-        color: var(--muted);
-        text-align: center;
-      }
-
-      .hide {
-        display: none !important;
-      }
-
-      @media (max-width: 900px) {
-        .topbar,
-        .grid {
-          grid-template-columns: 1fr;
-        }
-
-        .session {
-          justify-content: flex-start;
-        }
-
-        .filter-tabs {
-          justify-content: flex-start;
-        }
+      @media (max-width: 1024px) {
+        .topbar, .hero, .grid-2 { grid-template-columns: 1fr; }
+        .top-actions { justify-content: flex-start; }
+        .stat-grid, .groups-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .toolbar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       }
 
       @media (max-width: 640px) {
-        .shell {
-          width: min(100% - 20px, 1180px);
-          padding-top: 18px;
-        }
-
-        .panel-header,
-        .auth-box {
-          grid-template-columns: 1fr;
-        }
-
-        .match-main {
-          grid-template-columns: 1fr;
-        }
-
-        .team.away {
-          grid-template-columns: 42px minmax(0, 1fr);
-          text-align: left;
-        }
-
-        .team.away .team-name {
-          justify-content: flex-start;
-        }
-
-        .team.away .crest {
-          grid-column: 1;
-          grid-row: 1;
-        }
-
-        .team.away > div:not(.crest) {
-          grid-column: 2;
-        }
-
-        .score-box {
-          min-width: 0;
-          order: -1;
-        }
-
-        .prediction-row {
-          grid-template-columns: 1fr 18px 1fr;
-        }
-
-        .prediction-row button {
-          grid-column: 1 / -1;
-        }
-
-        .match-details {
-          grid-template-columns: 1fr;
-        }
+        .shell { width: min(100% - 20px, 1240px); padding-top: 14px; }
+        .auth-box, .stat-grid, .groups-grid, .toolbar, .match-main, .detail-grid { grid-template-columns: 1fr; }
+        .team.away { grid-template-columns: 48px minmax(0, 1fr); text-align: start; }
+        .team.away .flag-badge { grid-column: 1; grid-row: 1; }
+        .team.away > div:not(.flag-badge) { grid-column: 2; }
+        .score-box { min-width: 0; order: -1; }
+        .prediction-row { grid-template-columns: 1fr 20px 1fr; }
+        .prediction-row button { grid-column: 1 / -1; }
       }
     </style>
   </head>
   <body>
-    <main class="shell">
+    <div class="shell">
       <header class="topbar">
         <div class="brand">
-          <h1>World Cup 2026 Predictions</h1>
-          <p id="dateLabel">Today in Mecca time</p>
+          <div class="brand-mark">🏆 FIFA World Cup 2026</div>
+          <h1 data-i18n="appTitle">World Cup 2026 Predictions</h1>
+          <p data-i18n="appSubtitle">Predict every match, follow the table, and climb the live leaderboard.</p>
         </div>
-        <div class="session">
+        <div class="top-actions">
           <span id="realtimeStatus" class="pill">Realtime idle</span>
           <span id="userLabel" class="pill">No name</span>
-          <button id="refreshButton" class="secondary" type="button">Refresh</button>
-          <button id="signOutButton" class="secondary hide" type="button">Change name</button>
+          <button id="languageButton" class="secondary" type="button">العربية</button>
+          <button id="refreshButton" class="secondary" type="button" data-i18n="refresh">Refresh</button>
+          <button id="signOutButton" class="secondary hide" type="button" data-i18n="changeName">Change name</button>
         </div>
       </header>
 
+      <nav id="mainNav" class="nav" aria-label="Primary navigation"></nav>
       <div id="globalMessage" class="message"></div>
 
       <section id="authPanel" class="panel">
         <div class="panel-header">
           <div class="panel-title">
-            <h2>Choose your name</h2>
-            <span>No email required.</span>
+            <h2 data-i18n="chooseName">Choose your name</h2>
+            <span data-i18n="noEmail">No email required. Your browser stores your edit token.</span>
           </div>
         </div>
-        <form id="authForm" class="auth-box">
-          <input id="emailInput" type="text" autocomplete="name" placeholder="Your display name" minlength="2" maxlength="40" required>
-          <button id="magicLinkButton" type="submit">Continue</button>
-        </form>
-      </section>
-
-      <section class="grid" style="margin-top: 20px;">
-        <div class="panel">
-          <div class="panel-header tournament-header">
-            <div class="panel-title">
-              <h2>Tournament Matches</h2>
-              <span id="matchWindowLabel">All matches in Asia/Riyadh time</span>
-            </div>
-            <div id="matchFilterTabs" class="filter-tabs" role="tablist" aria-label="Match filters">
-              <button class="filter-tab active" type="button" data-match-filter="all" role="tab" aria-selected="true">All matches</button>
-              <button class="filter-tab" type="button" data-match-filter="today" role="tab" aria-selected="false">Today</button>
-              <button class="filter-tab" type="button" data-match-filter="upcoming" role="tab" aria-selected="false">Upcoming</button>
-              <button class="filter-tab" type="button" data-match-filter="finished" role="tab" aria-selected="false">Finished</button>
-            </div>
-          </div>
-          <div id="matchesList" class="matches">
-            <div class="loading">Loading matches...</div>
-          </div>
+        <div class="panel-body">
+          <form id="authForm" class="auth-box">
+            <input id="nameInput" type="text" autocomplete="name" placeholder="Your display name" minlength="2" maxlength="40" required>
+            <button id="continueButton" type="submit" data-i18n="continue">Continue</button>
+          </form>
         </div>
-
-        <aside class="panel">
-          <div class="panel-header">
-            <div class="panel-title">
-              <h2>Leaderboard</h2>
-              <span id="participantCount">0 participants</span>
-            </div>
-          </div>
-          <div id="leaderboardList" class="leaderboard-list">
-            <div class="loading">Loading leaderboard...</div>
-          </div>
-          <div id="adminPanel" class="admin">
-            <button id="fetchMatchesButton" type="button">Fetch official results</button>
-          </div>
-        </aside>
       </section>
-    </main>
+
+      <main id="pageRoot" style="margin-top: 18px;"></main>
+    </div>
+
+    <div id="predictionModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-card">
+        <div class="panel-header">
+          <div class="panel-title">
+            <h2 id="modalTitle">Prediction</h2>
+            <span id="modalSubtitle"></span>
+          </div>
+          <button id="closeModalButton" class="secondary" type="button" data-i18n="close">Close</button>
+        </div>
+        <div id="modalBody" class="panel-body"></div>
+      </div>
+    </div>
 
     <script>
       const SUPABASE_URL = "https://ojoroqmmvbhbqpugbkhy.supabase.co";
       const SUPABASE_ANON_KEY = "sb_publishable_BeVUdF56wvidKtUD_lZIWg_iBMP5E_J";
-      const MECCA_TIME_ZONE = "Asia/Riyadh";
       const WORLD_CUP_SEASON = 2026;
       const LOCAL_PLAYER_KEY = "wc2026_public_player";
-      const MATCH_FILTERS = {
-        ALL: "all",
-        TODAY: "today",
-        UPCOMING: "upcoming",
-        FINISHED: "finished",
+      const LOCAL_LANG_KEY = "wc2026_lang";
+      const DATE_TIME_ZONE = Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Riyadh";
+      const BASIC_MATCH_SELECT = "football_data_id,utc_date,status,stage,group_name,matchday,home_team_name,home_team_tla,away_team_name,away_team_tla,score_home,score_away,raw";
+      const EXTENDED_MATCH_SELECT = `${BASIC_MATCH_SELECT},match_number,stadium,city,country,home_penalties,away_penalties,winner`;
+
+      const PAGES = ["home", "schedule", "leaderboard", "groups", "bracket", "dashboard", "admin"];
+      const GROUP_ORDER = ["A","B","C","D","E","F","G","H","I","J","K","L"];
+
+      const translations = {
+        en: {
+          appTitle: "World Cup 2026 Predictions", appSubtitle: "Predict every match, follow the table, and climb the live leaderboard.",
+          home: "Home", schedule: "Matches", leaderboard: "Leaderboard", groups: "Groups", bracket: "Bracket", dashboard: "Dashboard", admin: "Admin",
+          refresh: "Refresh", changeName: "Change name", chooseName: "Choose your name", noEmail: "No email required. Your browser stores your edit token.",
+          continue: "Continue", close: "Close", predictNow: "Predict Now", viewSchedule: "View Schedule", viewLeaderboard: "Leaderboard",
+          nextMatch: "Next match", noNextMatch: "No upcoming match is loaded.", totalPredictions: "Total predictions", matchesPlayed: "Matches played",
+          topPredictor: "Top predictor", openMatches: "Open matches", allGroups: "All groups", allStages: "All stages", allStatuses: "All statuses",
+          search: "Search teams", allDates: "All dates", upcoming: "Upcoming", live: "Live", finished: "Finished", locked: "Locked",
+          save: "Save", saving: "Saving...", predictionSaved: "Prediction saved.", nameSaved: "Name saved.", enterNameFirst: "Enter your name before saving predictions.",
+          lockedMatch: "This match is locked.", invalidScore: "Scores must be whole numbers from 0 to 99.", yourPrediction: "Your prediction",
+          finalScore: "Final score", pointsGained: "Points gained", status: "Status", noPrediction: "No saved prediction", openUntilKickoff: "Open until kickoff",
+          enterNameToPredict: "Enter your name to predict", lockedByStatus: "Locked by match status", lockedAfterKickoff: "Locked after kickoff",
+          groupStandings: "Group standings", rank: "Rank", points: "Points", exact: "exact", outcome: "outcome", predictions: "predictions",
+          myPredictions: "My predictions", recentResults: "Recent results", missingPredictions: "Upcoming matches without my prediction",
+          adminTools: "Admin tools", fetchResults: "Fetch official results", adminNote: "Uses the existing Supabase Edge Function and admin PIN.",
+          noMatches: "No matches loaded.", noRows: "No rows yet.", startsIn: "Starts in", today: "Today", tomorrow: "Tomorrow",
+          localTime: "Local time", group: "Group", match: "Match", stadium: "Stadium", city: "City", country: "Country", tbd: "TBD"
+        },
+        ar: {
+          appTitle: "توقعات كأس العالم 2026", appSubtitle: "توقع نتائج المباريات، تابع ترتيب المجموعات، وتنافس في لوحة المتصدرين المباشرة.",
+          home: "الرئيسية", schedule: "المباريات", leaderboard: "المتصدرين", groups: "المجموعات", bracket: "الأدوار الإقصائية", dashboard: "لوحتي", admin: "الإدارة",
+          refresh: "تحديث", changeName: "تغيير الاسم", chooseName: "اختر اسمك", noEmail: "لا تحتاج إلى بريد إلكتروني. يتم حفظ رمز التعديل في هذا المتصفح.",
+          continue: "متابعة", close: "إغلاق", predictNow: "ابدأ التوقع", viewSchedule: "عرض المباريات", viewLeaderboard: "المتصدرين",
+          nextMatch: "المباراة القادمة", noNextMatch: "لا توجد مباراة قادمة محملة.", totalPredictions: "إجمالي التوقعات", matchesPlayed: "المباريات المنتهية",
+          topPredictor: "أفضل متوقع", openMatches: "مباريات متاحة", allGroups: "كل المجموعات", allStages: "كل المراحل", allStatuses: "كل الحالات",
+          search: "ابحث عن فريق", allDates: "كل التواريخ", upcoming: "قادمة", live: "مباشرة", finished: "منتهية", locked: "مغلقة",
+          save: "حفظ", saving: "جار الحفظ...", predictionSaved: "تم حفظ التوقع.", nameSaved: "تم حفظ الاسم.", enterNameFirst: "أدخل اسمك قبل حفظ التوقعات.",
+          lockedMatch: "هذه المباراة مغلقة.", invalidScore: "النتائج يجب أن تكون أرقاما صحيحة من 0 إلى 99.", yourPrediction: "توقعك",
+          finalScore: "النتيجة النهائية", pointsGained: "النقاط المكتسبة", status: "الحالة", noPrediction: "لا يوجد توقع محفوظ", openUntilKickoff: "متاحة حتى بداية المباراة",
+          enterNameToPredict: "أدخل اسمك للتوقع", lockedByStatus: "مغلقة بسبب حالة المباراة", lockedAfterKickoff: "مغلقة بعد بداية المباراة",
+          groupStandings: "ترتيب المجموعات", rank: "المركز", points: "نقاط", exact: "نتيجة صحيحة", outcome: "فائز صحيح", predictions: "توقعات",
+          myPredictions: "توقعاتي", recentResults: "آخر النتائج", missingPredictions: "مباريات قادمة بدون توقعي",
+          adminTools: "أدوات الإدارة", fetchResults: "جلب النتائج الرسمية", adminNote: "يستخدم دالة Supabase Edge الحالية ورمز الإدارة.",
+          noMatches: "لا توجد مباريات محملة.", noRows: "لا توجد بيانات بعد.", startsIn: "تبدأ بعد", today: "اليوم", tomorrow: "غدا",
+          localTime: "التوقيت المحلي", group: "المجموعة", match: "المباراة", stadium: "الملعب", city: "المدينة", country: "الدولة", tbd: "لم يحدد"
+        }
       };
-      const TEAM_FLAGS = {
-        Mexico: "🇲🇽",
-        "South Africa": "🇿🇦",
-        "Korea Republic": "🇰🇷",
-        "South Korea": "🇰🇷",
-        Czechia: "🇨🇿",
-        Canada: "🇨🇦",
-        "Bosnia and Herzegovina": "🇧🇦",
-        Qatar: "🇶🇦",
-        Switzerland: "🇨🇭",
-        Brazil: "🇧🇷",
-        Haiti: "🇭🇹",
-        Morocco: "🇲🇦",
-        Scotland: "\uD83C\uDFF4\uDB40\uDC67\uDB40\uDC62\uDB40\uDC73\uDB40\uDC63\uDB40\uDC74\uDB40\uDC7F",
-        Australia: "🇦🇺",
-        Paraguay: "🇵🇾",
-        Turkey: "🇹🇷",
-        Türkiye: "🇹🇷",
-        "United States": "🇺🇸",
-        USA: "🇺🇸",
-        "Côte d'Ivoire": "🇨🇮",
-        "Cote d'Ivoire": "🇨🇮",
-        "Ivory Coast": "🇨🇮",
-        Curacao: "🇨🇼",
-        Curaçao: "🇨🇼",
-        Ecuador: "🇪🇨",
-        Germany: "🇩🇪",
-        Japan: "🇯🇵",
-        Netherlands: "🇳🇱",
-        Sweden: "🇸🇪",
-        Tunisia: "🇹🇳",
-        Belgium: "🇧🇪",
-        Egypt: "🇪🇬",
-        Iran: "🇮🇷",
-        "IR Iran": "🇮🇷",
-        "New Zealand": "🇳🇿",
-        "Cape Verde": "🇨🇻",
-        "Cabo Verde": "🇨🇻",
-        "Saudi Arabia": "🇸🇦",
-        Spain: "🇪🇸",
-        Uruguay: "🇺🇾",
-        France: "🇫🇷",
-        Iraq: "🇮🇶",
-        Norway: "🇳🇴",
-        Senegal: "🇸🇳",
-        Algeria: "🇩🇿",
-        Argentina: "🇦🇷",
-        Austria: "🇦🇹",
-        Jordan: "🇯🇴",
-        Colombia: "🇨🇴",
-        "Congo DR": "🇨🇩",
-        "DR Congo": "🇨🇩",
-        Portugal: "🇵🇹",
-        Uzbekistan: "🇺🇿",
-        Croatia: "🇭🇷",
-        England: "\uD83C\uDFF4\uDB40\uDC67\uDB40\uDC62\uDB40\uDC65\uDB40\uDC6E\uDB40\uDC67\uDB40\uDC7F",
-        Ghana: "🇬🇭",
-        Panama: "🇵🇦",
+
+      const teamMeta = {
+        Mexico:["المكسيك","🇲🇽","A"], "South Africa":["جنوب أفريقيا","🇿🇦","A"], "Korea Republic":["كوريا الجنوبية","🇰🇷","A"], "South Korea":["كوريا الجنوبية","🇰🇷","A"], Czechia:["التشيك","🇨🇿","A"],
+        Canada:["كندا","🇨🇦","B"], "Bosnia and Herzegovina":["البوسنة والهرسك","🇧🇦","B"], Qatar:["قطر","🇶🇦","B"], Switzerland:["سويسرا","🇨🇭","B"],
+        Brazil:["البرازيل","🇧🇷","C"], Morocco:["المغرب","🇲🇦","C"], Haiti:["هايتي","🇭🇹","C"], Scotland:["اسكتلندا","\uD83C\uDFF4\uDB40\uDC67\uDB40\uDC62\uDB40\uDC73\uDB40\uDC63\uDB40\uDC74\uDB40\uDC7F","C"],
+        "United States":["الولايات المتحدة","🇺🇸","D"], USA:["الولايات المتحدة","🇺🇸","D"], Paraguay:["باراغواي","🇵🇾","D"], Australia:["أستراليا","🇦🇺","D"], Turkey:["تركيا","🇹🇷","D"], "Türkiye":["تركيا","🇹🇷","D"],
+        Germany:["ألمانيا","🇩🇪","E"], Curacao:["كوراساو","🇨🇼","E"], "Curaçao":["كوراساو","🇨🇼","E"], "Côte d'Ivoire":["كوت ديفوار","🇨🇮","E"], "Ivory Coast":["كوت ديفوار","🇨🇮","E"], Ecuador:["الإكوادور","🇪🇨","E"],
+        Netherlands:["هولندا","🇳🇱","F"], Japan:["اليابان","🇯🇵","F"], Sweden:["السويد","🇸🇪","F"], Tunisia:["تونس","🇹🇳","F"],
+        Belgium:["بلجيكا","🇧🇪","G"], Egypt:["مصر","🇪🇬","G"], Iran:["إيران","🇮🇷","G"], "IR Iran":["إيران","🇮🇷","G"], "New Zealand":["نيوزيلندا","🇳🇿","G"],
+        Spain:["إسبانيا","🇪🇸","H"], "Cape Verde":["الرأس الأخضر","🇨🇻","H"], "Cabo Verde":["الرأس الأخضر","🇨🇻","H"], "Saudi Arabia":["السعودية","🇸🇦","H"], Uruguay:["الأوروغواي","🇺🇾","H"],
+        France:["فرنسا","🇫🇷","I"], Senegal:["السنغال","🇸🇳","I"], Iraq:["العراق","🇮🇶","I"], Norway:["النرويج","🇳🇴","I"],
+        Argentina:["الأرجنتين","🇦🇷","J"], Algeria:["الجزائر","🇩🇿","J"], Austria:["النمسا","🇦🇹","J"], Jordan:["الأردن","🇯🇴","J"],
+        Portugal:["البرتغال","🇵🇹","K"], "DR Congo":["الكونغو الديمقراطية","🇨🇩","K"], "Congo DR":["الكونغو الديمقراطية","🇨🇩","K"], Uzbekistan:["أوزبكستان","🇺🇿","K"], Colombia:["كولومبيا","🇨🇴","K"],
+        England:["إنجلترا","\uD83C\uDFF4\uDB40\uDC67\uDB40\uDC62\uDB40\uDC65\uDB40\uDC6E\uDB40\uDC67\uDB40\uDC7F","L"], Croatia:["كرواتيا","🇭🇷","L"], Ghana:["غانا","🇬🇭","L"], Panama:["بنما","🇵🇦","L"]
+      };
+
+      const groupTeams = {
+        A:["Mexico","South Africa","South Korea","Czechia"], B:["Canada","Bosnia and Herzegovina","Qatar","Switzerland"], C:["Brazil","Morocco","Haiti","Scotland"],
+        D:["United States","Paraguay","Australia","Türkiye"], E:["Germany","Curaçao","Ivory Coast","Ecuador"], F:["Netherlands","Japan","Sweden","Tunisia"],
+        G:["Belgium","Egypt","Iran","New Zealand"], H:["Spain","Cape Verde","Saudi Arabia","Uruguay"], I:["France","Senegal","Iraq","Norway"],
+        J:["Argentina","Algeria","Austria","Jordan"], K:["Portugal","DR Congo","Uzbekistan","Colombia"], L:["England","Croatia","Ghana","Panama"]
       };
 
       const state = {
-        client: null,
-        player: null,
-        matches: [],
-        activeFilter: MATCH_FILTERS.ALL,
-        channel: null,
-        countdownTimer: null,
-        leaderboardTimer: null,
+        client:null, player:null, matches:[], leaderboard:[], activePage:"home", activeMatchId:null, channel:null, countdownTimer:null, refreshTimer:null,
+        filters:{ group:"all", stage:"all", status:"all", date:"all", search:"" },
+        lang: localStorage.getItem(LOCAL_LANG_KEY) || "en"
       };
 
       const els = {};
-
       document.addEventListener("DOMContentLoaded", init);
 
       async function init() {
-        cacheElements();
-        bindEvents();
-        updateDateLabels();
-
-        if (!isConfigured()) {
-          setMessage("Replace SUPABASE_URL and SUPABASE_ANON_KEY in index.html before deploying.", "error");
-          els.magicLinkButton.disabled = true;
-          els.refreshButton.disabled = true;
-          els.matchesList.innerHTML = '<div class="empty">Supabase is not configured yet.</div>';
-          els.leaderboardList.innerHTML = '<div class="empty">Supabase is not configured yet.</div>';
-          return;
-        }
-
-        if (!window.supabase?.createClient) {
-          setMessage("Supabase JS did not load. Check CDN or network access.", "error");
-          els.magicLinkButton.disabled = true;
-          els.refreshButton.disabled = true;
-          els.matchesList.innerHTML = '<div class="empty">Supabase JS is unavailable.</div>';
-          els.leaderboardList.innerHTML = '<div class="empty">Supabase JS is unavailable.</div>';
-          return;
-        }
-
+        cacheElements(); bindEvents(); applyLanguage(); renderNavigation();
+        if (!isConfigured()) { setMessage("Replace SUPABASE_URL and SUPABASE_ANON_KEY in index.html before deploying.", "error"); renderApp(); return; }
+        if (!window.supabase?.createClient) { setMessage("Supabase JS did not load. Check CDN or network access.", "error"); renderApp(); return; }
         state.client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         state.player = loadPlayer();
-
         await refreshAll();
-        window.setInterval(loadMatches, 60000);
-        window.addEventListener("beforeunload", clearCountdownTimer);
+        state.refreshTimer = window.setInterval(loadMatches, 60000);
+        window.addEventListener("beforeunload", () => { clearCountdownTimer(); if (state.refreshTimer) window.clearInterval(state.refreshTimer); });
       }
 
       function cacheElements() {
-        [
-          "adminPanel",
-          "authForm",
-          "authPanel",
-          "dateLabel",
-          "emailInput",
-          "fetchMatchesButton",
-          "globalMessage",
-          "leaderboardList",
-          "magicLinkButton",
-          "matchFilterTabs",
-          "matchesList",
-          "matchWindowLabel",
-          "participantCount",
-          "realtimeStatus",
-          "refreshButton",
-          "signOutButton",
-          "userLabel",
-        ].forEach((id) => {
-          els[id] = document.getElementById(id);
-        });
+        ["authForm","authPanel","closeModalButton","continueButton","globalMessage","languageButton","mainNav","modalBody","modalSubtitle","modalTitle","nameInput","pageRoot","predictionModal","realtimeStatus","refreshButton","signOutButton","userLabel"].forEach((id) => { els[id] = document.getElementById(id); });
       }
 
       function bindEvents() {
         els.authForm.addEventListener("submit", savePlayerName);
-        els.signOutButton.addEventListener("click", showNameForm);
         els.refreshButton.addEventListener("click", refreshAll);
-        els.fetchMatchesButton.addEventListener("click", fetchOfficialResults);
-        els.matchFilterTabs.addEventListener("click", changeMatchFilter);
-        els.matchesList.addEventListener("click", (event) => {
-          const button = event.target.closest("button[data-save-match]");
-          if (button) savePrediction(button.dataset.saveMatch);
-        });
-      }
-
-      function changeMatchFilter(event) {
-        const button = event.target.closest("button[data-match-filter]");
-        if (!button) return;
-
-        state.activeFilter = button.dataset.matchFilter;
-        renderMatches();
+        els.signOutButton.addEventListener("click", showNameForm);
+        els.languageButton.addEventListener("click", toggleLanguage);
+        els.closeModalButton.addEventListener("click", closePredictionModal);
+        els.predictionModal.addEventListener("click", (event) => { if (event.target === els.predictionModal) closePredictionModal(); });
+        els.pageRoot.addEventListener("click", handleClick);
+        els.pageRoot.addEventListener("input", handleInput);
+        els.pageRoot.addEventListener("change", handleInput);
+        els.modalBody.addEventListener("click", handleClick);
       }
 
       function isConfigured() {
-        return (
-          SUPABASE_URL.startsWith("https://") &&
-          !SUPABASE_URL.includes("YOUR_PROJECT_REF") &&
-          SUPABASE_ANON_KEY.length > 20 &&
-          !SUPABASE_ANON_KEY.includes("YOUR_SUPABASE_ANON_KEY")
-        );
+        return SUPABASE_URL.startsWith("https://") && !SUPABASE_URL.includes("YOUR_PROJECT_REF") && SUPABASE_ANON_KEY.length > 20 && !SUPABASE_ANON_KEY.includes("YOUR_SUPABASE_ANON_KEY");
       }
 
       async function refreshAll() {
         renderIdentity();
         await Promise.all([loadMatches(), loadLeaderboard()]);
         await configureRealtime();
-      }
-
-      async function savePlayerName(event) {
-        event.preventDefault();
-        clearMessage();
-
-        const displayName = normalizeDisplayName(els.emailInput.value);
-        if (!displayName) {
-          setMessage("Enter a name from 2 to 40 characters.", "error");
-          return;
-        }
-
-        const current = state.player;
-        state.player = {
-          id: current?.id || crypto.randomUUID(),
-          editToken: current?.editToken || randomToken(),
-          displayName,
-        };
-
-        setBusy(els.magicLinkButton, true, "Saving...");
-        try {
-          const { error } = await state.client.rpc("register_guest_player", {
-            p_guest_id: state.player.id,
-            p_edit_token: state.player.editToken,
-            p_display_name: state.player.displayName,
-          });
-
-          if (error) throw error;
-
-          localStorage.setItem(LOCAL_PLAYER_KEY, JSON.stringify(state.player));
-          renderIdentity();
-          await Promise.all([loadMatches(), loadLeaderboard()]);
-          setMessage("Name saved. You can now predict open matches.", "success");
-        } catch (error) {
-          state.player = current;
-          setMessage(error.message || "Could not save name.", "error");
-        } finally {
-          setBusy(els.magicLinkButton, false, "Continue");
-        }
-      }
-
-      function showNameForm() {
-        clearMessage();
-        els.authPanel.classList.remove("hide");
-        els.emailInput.value = state.player?.displayName || "";
-        window.setTimeout(() => els.emailInput.focus(), 0);
-      }
-
-      function loadPlayer() {
-        try {
-          const player = JSON.parse(localStorage.getItem(LOCAL_PLAYER_KEY) || "null");
-          if (!player?.id || !player?.editToken || !player?.displayName) return null;
-          return player;
-        } catch {
-          return null;
-        }
+        renderApp();
       }
 
       async function loadMatches() {
-        updateDateLabels();
-
+        if (!state.client) return;
         try {
-          const { data: matches, error } = await state.client
+          let { data, error } = await state.client
             .from("matches")
-            .select(
-              "football_data_id,utc_date,status,stage,group_name,matchday,home_team_name,home_team_tla,home_team_crest,away_team_name,away_team_tla,away_team_crest,score_home,score_away",
-            )
+            .select(EXTENDED_MATCH_SELECT)
             .order("utc_date", { ascending: true });
 
+          if (error && String(error.message || "").includes("Could not find")) {
+            const fallback = await state.client
+              .from("matches")
+              .select(BASIC_MATCH_SELECT)
+              .order("utc_date", { ascending: true });
+            data = fallback.data;
+            error = fallback.error;
+          }
+
           if (error) throw error;
-
-          const predictionMap = await loadCurrentPlayerPredictions(matches ?? []);
-          state.matches = (matches ?? []).map((match) => ({
-            ...match,
-            prediction: predictionMap.get(String(match.football_data_id)) ?? null,
-          }));
-
-          renderMatches();
+          const predictionMap = await loadCurrentPlayerPredictions(data ?? []);
+          state.matches = (data ?? []).map((match) => ({ ...match, prediction: predictionMap.get(String(match.football_data_id)) ?? null }));
+          renderApp();
         } catch (error) {
-          clearCountdownTimer();
-          els.matchesList.innerHTML = `<div class="empty">${escapeHtml(error.message || "Could not load matches.")}</div>`;
+          setMessage(error.message || "Could not load matches.", "error");
         }
       }
 
       async function loadCurrentPlayerPredictions(matches) {
         const map = new Map();
-        if (!state.player || matches.length === 0) return map;
-
+        if (!state.client || !state.player || matches.length === 0) return map;
         const ids = matches.map((match) => match.football_data_id);
-        const { data, error } = await state.client
-          .from("predictions")
-          .select("match_id,home_score,away_score,points")
-          .eq("guest_id", state.player.id)
-          .in("match_id", ids);
-
+        const { data, error } = await state.client.from("predictions").select("match_id,home_score,away_score,points,updated_at").eq("guest_id", state.player.id).in("match_id", ids);
         if (error) throw error;
-        (data ?? []).forEach((prediction) => {
-          map.set(String(prediction.match_id), prediction);
-        });
+        (data ?? []).forEach((prediction) => map.set(String(prediction.match_id), prediction));
         return map;
       }
 
       async function loadLeaderboard() {
+        if (!state.client) return;
         try {
-          const [{ data: rows, error: leaderboardError }, { data: count, error: countError }] = await Promise.all([
-            state.client.rpc("leaderboard"),
-            state.client.rpc("participant_count"),
-          ]);
-
-          if (leaderboardError) throw leaderboardError;
-          if (countError) throw countError;
-
-          els.participantCount.textContent = `${count ?? 0} ${Number(count) === 1 ? "participant" : "participants"}`;
-          renderLeaderboard(rows ?? []);
+          const { data, error } = await state.client.rpc("leaderboard");
+          if (error) throw error;
+          state.leaderboard = data ?? [];
         } catch (error) {
-          els.leaderboardList.innerHTML = `<div class="empty">${escapeHtml(error.message || "Could not load leaderboard.")}</div>`;
+          setMessage(error.message || "Could not load leaderboard.", "error");
         }
       }
 
       async function configureRealtime() {
-        if (state.channel) {
-          await state.client.removeChannel(state.channel);
-          state.channel = null;
-        }
-
+        if (!state.client) return;
+        if (state.channel) { await state.client.removeChannel(state.channel); state.channel = null; }
         state.channel = state.client
-          .channel("leaderboard-predictions")
-          .on(
-            "postgres_changes",
-            { event: "*", schema: "public", table: "predictions" },
-            () => {
-              window.clearTimeout(state.leaderboardTimer);
-              state.leaderboardTimer = window.setTimeout(() => {
-                loadLeaderboard();
-                loadMatches();
-              }, 250);
-            },
-          )
-          .on(
-            "postgres_changes",
-            { event: "*", schema: "public", table: "guest_players" },
-            () => {
-              window.clearTimeout(state.leaderboardTimer);
-              state.leaderboardTimer = window.setTimeout(loadLeaderboard, 250);
-            },
-          )
-          .subscribe((status) => {
-            els.realtimeStatus.textContent = `Realtime ${status.toLowerCase()}`;
-          });
+          .channel("world-cup-live")
+          .on("postgres_changes", { event:"*", schema:"public", table:"predictions" }, debounceRefresh)
+          .on("postgres_changes", { event:"*", schema:"public", table:"guest_players" }, debounceRefresh)
+          .on("postgres_changes", { event:"*", schema:"public", table:"matches" }, debounceRefresh)
+          .subscribe((status) => { els.realtimeStatus.textContent = `Realtime ${status.toLowerCase()}`; });
+      }
+
+      let realtimeTimer = null;
+      function debounceRefresh() {
+        window.clearTimeout(realtimeTimer);
+        realtimeTimer = window.setTimeout(() => Promise.all([loadMatches(), loadLeaderboard()]).then(renderApp), 250);
+      }
+
+      async function savePlayerName(event) {
+        event.preventDefault(); clearMessage();
+        const displayName = normalizeDisplayName(els.nameInput.value);
+        if (!displayName) { setMessage("Enter a name from 2 to 40 characters.", "error"); return; }
+        const current = state.player;
+        state.player = { id: current?.id || crypto.randomUUID(), editToken: current?.editToken || randomToken(), displayName };
+        setBusy(els.continueButton, true, t("saving"));
+        try {
+          const { error } = await state.client.rpc("register_guest_player", { p_guest_id: state.player.id, p_edit_token: state.player.editToken, p_display_name: state.player.displayName });
+          if (error) throw error;
+          localStorage.setItem(LOCAL_PLAYER_KEY, JSON.stringify(state.player));
+          renderIdentity();
+          await Promise.all([loadMatches(), loadLeaderboard()]);
+          setMessage(t("nameSaved"), "success");
+        } catch (error) {
+          state.player = current; setMessage(error.message || "Could not save name.", "error");
+        } finally {
+          setBusy(els.continueButton, false, t("continue"));
+        }
+      }
+
+      function loadPlayer() {
+        try {
+          const player = JSON.parse(localStorage.getItem(LOCAL_PLAYER_KEY) || "null");
+          return player?.id && player?.editToken && player?.displayName ? player : null;
+        } catch { return null; }
+      }
+
+      function showNameForm() {
+        clearMessage(); els.authPanel.classList.remove("hide"); els.nameInput.value = state.player?.displayName || ""; window.setTimeout(() => els.nameInput.focus(), 0);
       }
 
       function renderIdentity() {
-        if (!state.player) {
-          els.authPanel.classList.remove("hide");
-          els.signOutButton.classList.add("hide");
-          els.userLabel.textContent = "No name";
-          els.adminPanel.classList.add("show");
-          return;
-        }
-
-        els.authPanel.classList.add("hide");
-        els.signOutButton.classList.remove("hide");
-        els.userLabel.textContent = state.player.displayName;
-        els.adminPanel.classList.add("show");
+        if (!state.player) { els.authPanel.classList.remove("hide"); els.signOutButton.classList.add("hide"); els.userLabel.textContent = "No name"; return; }
+        els.authPanel.classList.add("hide"); els.signOutButton.classList.remove("hide"); els.userLabel.textContent = state.player.displayName;
       }
 
-      function renderMatches() {
-        updateFilterTabs();
-        clearCountdownTimer();
+      function renderNavigation() {
+        els.mainNav.innerHTML = PAGES.map((page) => `<button class="nav-button ${state.activePage === page ? "active" : ""}" type="button" data-page="${page}">${escapeHtml(t(page))}</button>`).join("");
+      }
 
-        if (state.matches.length === 0) {
-          els.matchWindowLabel.textContent = "No matches loaded";
-          els.matchesList.innerHTML = '<div class="empty">No World Cup matches are stored yet.</div>';
-          return;
-        }
-
-        const visibleMatches = state.matches.filter(matchPassesActiveFilter);
-        els.matchWindowLabel.textContent = matchListSummary(visibleMatches, state.matches.length);
-
-        if (visibleMatches.length === 0) {
-          els.matchesList.innerHTML = `<div class="empty">${escapeHtml(emptyFilterMessage())}</div>`;
-          return;
-        }
-
-        els.matchesList.innerHTML = groupMatchesByMeccaDate(visibleMatches)
-          .map(([dateKey, matches]) => renderMatchGroup(dateKey, matches))
-          .join("");
-
+      function renderApp() {
+        applyLanguage(); renderNavigation(); renderIdentity(); clearCountdownTimer();
+        const renderers = { home:renderHomePage, schedule:renderSchedulePage, leaderboard:renderLeaderboardPage, groups:renderGroupsPage, bracket:renderBracketPage, dashboard:renderDashboardPage, admin:renderAdminPage };
+        els.pageRoot.innerHTML = (renderers[state.activePage] || renderHomePage)();
         resetCountdownTimer();
       }
 
-      function renderMatchGroup(dateKey, matches) {
+      function renderHomePage() {
+        const next = nextMatch();
+        const stats = appStats();
         return `
-          <section class="match-date-section" aria-label="${escapeAttribute(formatDateHeading(dateKey))}">
-            <div class="date-heading">
-              <h3>${escapeHtml(formatDateHeading(dateKey))}</h3>
-              <span>${matches.length} ${matches.length === 1 ? "match" : "matches"}</span>
+          <section class="hero">
+            <div class="hero-card">
+              <div><div class="brand-mark">USA · Canada · Mexico</div><h2>${escapeHtml(t("appTitle"))}</h2><p>${escapeHtml(t("appSubtitle"))}</p></div>
+              <div class="hero-actions"><button type="button" data-page="schedule">${escapeHtml(t("predictNow"))}</button><button class="secondary" type="button" data-page="schedule">${escapeHtml(t("viewSchedule"))}</button><button class="secondary" type="button" data-page="leaderboard">${escapeHtml(t("viewLeaderboard"))}</button></div>
             </div>
-            ${matches.map(renderMatch).join("")}
+            <div class="panel"><div class="panel-header"><div class="panel-title"><h2>${escapeHtml(t("nextMatch"))}</h2><span>${escapeHtml(t("localTime"))}: ${escapeHtml(DATE_TIME_ZONE)}</span></div></div><div class="panel-body">${next ? renderMatchCard(next) : empty(t("noNextMatch"))}</div></div>
           </section>
+          <section class="stat-grid" style="margin-top:16px;">${renderStat(t("totalPredictions"), stats.predictions)}${renderStat(t("matchesPlayed"), stats.finished)}${renderStat(t("topPredictor"), stats.top)}${renderStat(t("openMatches"), stats.open)}</section>
+          <section class="grid-2" style="margin-top:16px;"><div class="panel"><div class="panel-header"><div class="panel-title"><h2>${escapeHtml(t("schedule"))}</h2><span>${escapeHtml(t("upcoming"))}</span></div></div><div class="panel-body match-list">${filteredMatches().slice(0,5).map(renderMatchCard).join("") || empty(t("noMatches"))}</div></div><div class="panel"><div class="panel-header"><div class="panel-title"><h2>${escapeHtml(t("leaderboard"))}</h2><span>${escapeHtml(t("points"))}</span></div></div><div class="panel-body">${renderLeaderboardRows(state.leaderboard.slice(0,6))}</div></div></section>
         `;
       }
 
-      function renderMatch(match) {
-        const kickoff = new Date(match.utc_date);
-        const isOpen = isPredictionOpen(match);
-        const finished = isFinishedMatch(match);
-        const finalScore = hasFinalScore(match);
-        const prediction = match.prediction;
-        const statusClass = isOpen ? "open" : finished ? "finished" : "locked";
-        const resultText = finalScore
-          ? `${Number(match.score_home)} - ${Number(match.score_away)}`
-          : "vs";
-        const statusText = finished ? "FINISHED" : match.status || "SCHEDULED";
-        const lockReason = predictionLockReason(match);
-        const groupStage = [match.stage, match.group_name].filter(Boolean).join(" / ");
-        const countdown = isFutureScheduledMatch(match)
-          ? `<div class="countdown" data-countdown="${escapeAttribute(match.football_data_id)}" data-kickoff-ms="${kickoff.getTime()}">${escapeHtml(formatCountdown(kickoff.getTime() - Date.now()))}</div>`
-          : "";
-
-        return `
-          <article class="match-card">
-            <div class="match-main">
-              ${renderTeam(match.home_team_name, match.home_team_tla, match.home_team_crest, "home")}
-              <div class="score-box">
-                <div class="kickoff">${escapeHtml(formatMeccaTime(kickoff))}</div>
-                <div class="score-line ${finalScore ? "final" : ""}">${escapeHtml(resultText)}</div>
-                <div class="status ${statusClass}">${escapeHtml(statusText)}</div>
-                ${countdown}
-              </div>
-              ${renderTeam(match.away_team_name, match.away_team_tla, match.away_team_crest, "away")}
-            </div>
-            ${isOpen
-              ? renderPredictionForm(match, prediction, groupStage, lockReason)
-              : renderMatchDetails(match, prediction, groupStage, lockReason, finished)}
-          </article>
-        `;
+      function renderSchedulePage() {
+        const matches = filteredMatches();
+        return `<section class="panel"><div class="panel-header"><div class="panel-title"><h2>${escapeHtml(t("schedule"))}</h2><span>${matches.length} / ${state.matches.length || 0} ${escapeHtml(t("match"))} · ${escapeHtml(DATE_TIME_ZONE)}</span></div></div><div class="panel-body stack">${renderFilters()}<div class="match-list">${renderGroupedMatches(matches)}</div></div></section>`;
       }
 
-      function renderPredictionForm(match, prediction, groupStage, lockReason) {
-        const homeValue = prediction?.home_score ?? "";
-        const awayValue = prediction?.away_score ?? "";
-        const matchId = escapeAttribute(match.football_data_id);
-
-        return `
-          <div class="prediction-row">
-            <input
-              data-home-score="${matchId}"
-              type="number"
-              min="0"
-              max="99"
-              step="1"
-              inputmode="numeric"
-              placeholder="Home"
-              value="${escapeAttribute(homeValue)}"
-            >
-            <span class="dash">-</span>
-            <input
-              data-away-score="${matchId}"
-              type="number"
-              min="0"
-              max="99"
-              step="1"
-              inputmode="numeric"
-              placeholder="Away"
-              value="${escapeAttribute(awayValue)}"
-            >
-            <button type="button" data-save-match="${matchId}">Save</button>
-            <div class="prediction-note">
-              ${escapeHtml(groupStage || "World Cup 2026")}
-              ${prediction ? ` · Saved: ${escapeHtml(formatPrediction(prediction))}` : ""}
-              · ${escapeHtml(lockReason)}
-            </div>
-          </div>
-        `;
+      function renderFilters() {
+        const dates = Array.from(new Set(state.matches.map((match) => localDateKey(new Date(match.utc_date))))).sort();
+        return `<div class="toolbar">
+          <input data-filter="search" value="${escapeAttribute(state.filters.search)}" placeholder="${escapeAttribute(t("search"))}">
+          <select data-filter="group"><option value="all">${escapeHtml(t("allGroups"))}</option>${GROUP_ORDER.map((group) => `<option value="${group}" ${state.filters.group === group ? "selected" : ""}>${escapeHtml(t("group"))} ${group}</option>`).join("")}</select>
+          <select data-filter="status">${[["all",t("allStatuses")],["upcoming",t("upcoming")],["live",t("live")],["finished",t("finished")]].map(([v,l]) => `<option value="${v}" ${state.filters.status === v ? "selected" : ""}>${escapeHtml(l)}</option>`).join("")}</select>
+          <select data-filter="stage">${[["all",t("allStages")],["group",t("groups")],["knockout",t("bracket")]].map(([v,l]) => `<option value="${v}" ${state.filters.stage === v ? "selected" : ""}>${escapeHtml(l)}</option>`).join("")}</select>
+          <select data-filter="date"><option value="all">${escapeHtml(t("allDates"))}</option>${dates.map((date) => `<option value="${date}" ${state.filters.date === date ? "selected" : ""}>${escapeHtml(formatDateHeading(date))}</option>`).join("")}</select>
+        </div>`;
       }
 
-      function renderMatchDetails(match, prediction, groupStage, lockReason, finished) {
-        const firstLabel = finished ? "Final score" : "Match";
-        const firstValue = finished && hasFinalScore(match)
-          ? `${Number(match.score_home)} - ${Number(match.score_away)}`
-          : groupStage || "World Cup 2026";
-        const predictionText = prediction ? formatPrediction(prediction) : "No saved prediction";
-        const points = prediction?.points ?? 0;
-
-        return `
-          <div class="match-details">
-            <div class="detail-box">
-              <div class="detail-label">${escapeHtml(firstLabel)}</div>
-              <div class="detail-value">${escapeHtml(firstValue)}</div>
-            </div>
-            <div class="detail-box">
-              <div class="detail-label">Your prediction</div>
-              <div class="detail-value">${escapeHtml(predictionText)}</div>
-            </div>
-            <div class="detail-box">
-              <div class="detail-label">${finished ? "Points gained" : "Status"}</div>
-              <div class="detail-value ${finished ? "points-value" : ""}">${escapeHtml(finished ? points : lockReason)}</div>
-            </div>
-          </div>
-        `;
-      }
-
-      function renderTeam(name, tla, crest, side) {
-        const safeName = escapeHtml(name || "TBD");
-        const safeTla = escapeHtml(tla || "");
-        const fallback = escapeHtml((tla || name || "TBD").slice(0, 3).toUpperCase());
-        const flag = escapeHtml(getTeamFlag(name));
-        const image = crest
-          ? `<img src="${escapeAttribute(crest)}" alt="${safeName} crest" loading="lazy" onerror="this.outerHTML='${escapeAttribute(fallback)}'">`
-          : fallback;
-        const nameHtml = `<div class="team-name"><span class="team-flag" aria-hidden="true">${flag}</span><span>${safeName}</span></div>`;
-
-        if (side === "away") {
-          return `
-            <div class="team away">
-              <div>
-                ${nameHtml}
-                <div class="team-code">${safeTla}</div>
-              </div>
-              <div class="crest">${image}</div>
-            </div>
-          `;
-        }
-
-        return `
-          <div class="team">
-            <div class="crest">${image}</div>
-            <div>
-              ${nameHtml}
-              <div class="team-code">${safeTla}</div>
-            </div>
-          </div>
-        `;
-      }
-
-      function updateFilterTabs() {
-        els.matchFilterTabs.querySelectorAll("button[data-match-filter]").forEach((button) => {
-          const active = button.dataset.matchFilter === state.activeFilter;
-          button.classList.toggle("active", active);
-          button.setAttribute("aria-selected", active ? "true" : "false");
-        });
-      }
-
-      function matchPassesActiveFilter(match) {
-        if (state.activeFilter === MATCH_FILTERS.TODAY) {
-          return getMeccaDateKey(new Date(match.utc_date)) === getMeccaDateKey(new Date());
-        }
-
-        if (state.activeFilter === MATCH_FILTERS.UPCOMING) {
-          return isFutureScheduledMatch(match);
-        }
-
-        if (state.activeFilter === MATCH_FILTERS.FINISHED) {
-          return isFinishedMatch(match);
-        }
-
-        return true;
-      }
-
-      function groupMatchesByMeccaDate(matches) {
+      function renderGroupedMatches(matches) {
+        if (!matches.length) return empty(t("noMatches"));
         const groups = new Map();
-        matches.forEach((match) => {
-          const key = getMeccaDateKey(new Date(match.utc_date));
-          if (!groups.has(key)) groups.set(key, []);
-          groups.get(key).push(match);
-        });
-        return Array.from(groups.entries());
+        matches.forEach((match) => { const key = localDateKey(new Date(match.utc_date)); if (!groups.has(key)) groups.set(key, []); groups.get(key).push(match); });
+        return Array.from(groups.entries()).map(([date, dayMatches]) => `<section class="date-section"><div class="date-heading"><h3>${escapeHtml(formatDateHeading(date))}</h3><span>${dayMatches.length} ${escapeHtml(t("match"))}</span></div>${dayMatches.map(renderMatchCard).join("")}</section>`).join("");
       }
 
-      function matchListSummary(visibleMatches, totalMatches) {
-        const label = {
-          [MATCH_FILTERS.ALL]: "All matches",
-          [MATCH_FILTERS.TODAY]: "Today",
-          [MATCH_FILTERS.UPCOMING]: "Upcoming",
-          [MATCH_FILTERS.FINISHED]: "Finished",
-        }[state.activeFilter] || "All matches";
-
-        return `${label}: ${visibleMatches.length} of ${totalMatches} matches · Asia/Riyadh`;
+      function renderMatchCard(match) {
+        const isOpen = isPredictionOpen(match), finished = isFinishedMatch(match), live = isLiveMatch(match), kickoff = new Date(match.utc_date);
+        const scoreText = hasFinalScore(match) ? `${Number(match.score_home)} - ${Number(match.score_away)}` : "vs";
+        const statusClass = isOpen ? "open" : live ? "live" : finished ? "finished" : "";
+        const statusText = isOpen ? t("upcoming") : live ? t("live") : finished ? t("finished") : t("locked");
+        const venue = [match.stadium, match.city, match.country].filter(Boolean).join(" · ") || match.raw?.venue || match.raw?.stadium || match.raw?.area?.name || t("tbd");
+        return `<article class="match-card" data-match-card="${escapeAttribute(match.football_data_id)}">
+          <div class="match-top"><span>#${escapeHtml(match.match_number || match.matchday || "-")} · ${escapeHtml(stageLabel(match))}</span><span>${escapeHtml(formatDateTime(kickoff))}</span></div>
+          <div class="match-main">${renderTeam(match.home_team_name, match.home_team_tla, "home")}<div class="score-box"><div class="score-line">${escapeHtml(scoreText)}</div><div class="status ${statusClass}">${escapeHtml(statusText)}</div>${isFutureScheduledMatch(match) ? `<div class="countdown" data-countdown="${escapeAttribute(match.football_data_id)}" data-kickoff-ms="${kickoff.getTime()}">${escapeHtml(formatCountdown(kickoff.getTime() - Date.now()))}</div>` : ""}</div>${renderTeam(match.away_team_name, match.away_team_tla, "away")}</div>
+          <div class="muted">${escapeHtml(t("group"))} ${escapeHtml(extractGroup(match) || "-")} · ${escapeHtml(venue)}</div>
+          ${isOpen ? renderPredictionForm(match) : renderMatchDetails(match)}
+        </article>`;
       }
 
-      function emptyFilterMessage() {
-        if (state.activeFilter === MATCH_FILTERS.TODAY) return "No matches are scheduled for today in Mecca time.";
-        if (state.activeFilter === MATCH_FILTERS.UPCOMING) return "No future scheduled matches are currently open.";
-        if (state.activeFilter === MATCH_FILTERS.FINISHED) return "No finished matches are available yet.";
-        return "No matches match this filter.";
+      function renderTeam(name, tla, side) {
+        const main = localizedTeamName(name), alt = state.lang === "ar" ? name || "TBD" : teamMeta[name]?.[0] || tla || "";
+        const flag = `<div class="flag-badge">${escapeHtml(teamFlag(name))}</div>`;
+        const text = `<div><div class="team-name">${escapeHtml(main)}</div><div class="team-alt">${escapeHtml(alt || tla || "")}</div></div>`;
+        return `<div class="team ${side === "away" ? "away" : ""}">${side === "away" ? text + flag : flag + text}</div>`;
       }
 
-      function isFutureScheduledMatch(match) {
-        return match.status === "SCHEDULED" && new Date(match.utc_date).getTime() > Date.now();
+      function renderPredictionForm(match) {
+        const p = match.prediction, id = escapeAttribute(match.football_data_id);
+        return `<div class="prediction-row"><input data-home-score="${id}" type="number" min="0" max="99" step="1" inputmode="numeric" placeholder="0" value="${escapeAttribute(p?.home_score ?? "")}"><span class="muted" style="text-align:center;font-weight:900;">-</span><input data-away-score="${id}" type="number" min="0" max="99" step="1" inputmode="numeric" placeholder="0" value="${escapeAttribute(p?.away_score ?? "")}"><button type="button" data-save-match="${id}">${escapeHtml(t("save"))}</button><div class="prediction-note">${p ? `${escapeHtml(t("yourPrediction"))}: ${escapeHtml(formatPrediction(p))} · ` : ""}${escapeHtml(predictionLockReason(match))}<button class="secondary" style="margin-inline-start:8px;min-height:30px;" type="button" data-open-match="${id}">${escapeHtml(t("match"))}</button></div></div>`;
       }
 
-      function isFinishedMatch(match) {
-        return hasFinalScore(match) || ["FINISHED", "FULL_TIME", "AWARDED"].includes(String(match.status || "").toUpperCase());
+      function renderMatchDetails(match) {
+        const finished = isFinishedMatch(match), p = match.prediction;
+        return `<div class="detail-grid"><div class="detail-box"><div class="detail-label">${escapeHtml(finished ? t("finalScore") : t("status"))}</div><div class="detail-value">${escapeHtml(finished && hasFinalScore(match) ? `${Number(match.score_home)} - ${Number(match.score_away)}` : predictionLockReason(match))}</div></div><div class="detail-box"><div class="detail-label">${escapeHtml(t("yourPrediction"))}</div><div class="detail-value">${escapeHtml(p ? formatPrediction(p) : t("noPrediction"))}</div></div><div class="detail-box"><div class="detail-label">${escapeHtml(finished ? t("pointsGained") : t("match"))}</div><div class="detail-value">${escapeHtml(finished ? p?.points ?? 0 : stageLabel(match))}</div></div></div>`;
       }
 
-      function hasFinalScore(match) {
-        return isScoreValue(match.score_home) && isScoreValue(match.score_away);
+      function renderLeaderboardPage() {
+        return `<section class="panel"><div class="panel-header"><div class="panel-title"><h2>${escapeHtml(t("leaderboard"))}</h2><span>${escapeHtml(t("points"))} · ${escapeHtml(t("exact"))} · ${escapeHtml(t("outcome"))}</span></div></div><div class="panel-body">${renderLeaderboardRows(state.leaderboard)}</div></section>`;
       }
 
-      function isScoreValue(value) {
-        return value !== null && value !== undefined && value !== "" && Number.isFinite(Number(value));
+      function renderLeaderboardRows(rows) {
+        if (!rows.length) return empty(t("noRows"));
+        return rows.map((row, index) => { const medal = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : index + 1; const acc = row.predictions_count ? Math.round(((row.exact_scores + row.correct_outcomes) / row.predictions_count) * 100) : 0; return `<div class="leader-row"><div class="rank">${escapeHtml(medal)}</div><div><div class="leader-name">${escapeHtml(row.display_name || "Player")}</div><div class="leader-meta">${row.predictions_count} ${escapeHtml(t("predictions"))} · ${row.exact_scores} ${escapeHtml(t("exact"))} · ${row.correct_outcomes} ${escapeHtml(t("outcome"))} · ${acc}%</div></div><div class="points">${escapeHtml(row.total_points ?? 0)}</div></div>`; }).join("");
       }
 
-      function formatPrediction(prediction) {
-        return `${Number(prediction.home_score)} - ${Number(prediction.away_score)}`;
+      function renderGroupsPage() {
+        const standings = computeGroupStandings();
+        return `<section class="panel"><div class="panel-header"><div class="panel-title"><h2>${escapeHtml(t("groupStandings"))}</h2><span>12 ${escapeHtml(t("groups"))} · top 2 + best third-place teams</span></div></div><div class="panel-body groups-grid">${GROUP_ORDER.map((group) => renderGroupTable(group, standings[group] || [])).join("")}</div></section>`;
       }
 
-      function resetCountdownTimer() {
-        clearCountdownTimer();
-        const hadExpiredCountdown = updateCountdowns();
-
-        if (hadExpiredCountdown) return;
-
-        if (document.querySelector("[data-countdown]")) {
-          state.countdownTimer = window.setInterval(updateCountdowns, 1000);
-        }
+      function renderGroupTable(group, rows) {
+        return `<div class="card" style="padding:12px;"><h3 style="margin:0 0 8px;color:var(--gold);">${escapeHtml(t("group"))} ${group}</h3><table><thead><tr><th>#</th><th>${escapeHtml(t("match"))}</th><th>P</th><th>GD</th><th>Pts</th></tr></thead><tbody>${rows.map((row, i) => `<tr class="${i < 2 ? "qualified" : i === 2 ? "third-place" : ""}"><td>${i + 1}</td><td>${escapeHtml(teamFlag(row.team))} ${escapeHtml(localizedTeamName(row.team))}</td><td>${row.played}</td><td>${row.goalDifference}</td><td>${row.points}</td></tr>`).join("")}</tbody></table></div>`;
       }
 
-      function clearCountdownTimer() {
-        if (!state.countdownTimer) return;
-        window.clearInterval(state.countdownTimer);
-        state.countdownTimer = null;
+      function renderBracketPage() {
+        const rounds = [["Round of 32","Jun 28 - Jul 3",16],["Round of 16","Jul 4 - 7",8],["Quarterfinals","Jul 9 - 11",4],["Semifinals","Jul 14 - 15",2],["Third Place","Jul 18",1],["Final","Jul 19",1]];
+        const knockout = state.matches.filter((m) => !isGroupStage(m));
+        return `<section class="panel"><div class="panel-header"><div class="panel-title"><h2>${escapeHtml(t("bracket"))}</h2><span>Round of 32 → Final · ${escapeHtml(t("tbd"))} until group results are known</span></div></div><div class="panel-body bracket">${rounds.map(([n,d,c]) => renderBracketRound(n,d,Number(c),knockout)).join("")}</div></section>`;
       }
 
-      function updateCountdowns() {
-        const countdowns = Array.from(document.querySelectorAll("[data-countdown]"));
-        let hasExpired = false;
-
-        countdowns.forEach((node) => {
-          const kickoffMs = Number(node.dataset.kickoffMs);
-          const remainingMs = kickoffMs - Date.now();
-
-          if (!Number.isFinite(kickoffMs) || remainingMs <= 0) {
-            hasExpired = true;
-            node.textContent = "Kickoff reached";
-            return;
-          }
-
-          node.textContent = formatCountdown(remainingMs);
-        });
-
-        if (hasExpired) {
-          renderMatches();
-        }
-
-        return hasExpired;
+      function renderBracketRound(name, date, count, knockout) {
+        const roundMatches = knockout.filter((m) => normalizeStage(m.stage).includes(normalizeStage(name)));
+        const matches = roundMatches.length ? roundMatches : Array.from({ length: count }, (_, index) => ({ placeholder:true, index }));
+        return `<div class="round"><h3>${escapeHtml(name)}</h3><div class="muted">${escapeHtml(date)}</div>${matches.map((m,i) => `<div class="bracket-match">${m.placeholder ? `${escapeHtml(t("match"))} ${i + 1}<br><strong>${escapeHtml(t("tbd"))}</strong> vs <strong>${escapeHtml(t("tbd"))}</strong>` : `${escapeHtml(formatDateTime(new Date(m.utc_date)))}<br><strong>${escapeHtml(localizedTeamName(m.home_team_name))}</strong> vs <strong>${escapeHtml(localizedTeamName(m.away_team_name))}</strong>`}</div>`).join("")}</div>`;
       }
 
-      function formatCountdown(milliseconds) {
-        const totalSeconds = Math.max(0, Math.floor(milliseconds / 1000));
-        const hours = Math.floor(totalSeconds / 3600);
-        const minutes = Math.floor((totalSeconds % 3600) / 60);
-        const seconds = totalSeconds % 60;
-        return `Starts in ${hours}h ${minutes}m ${seconds}s`;
+      function renderDashboardPage() {
+        if (!state.player) return `<section class="panel"><div class="empty">${escapeHtml(t("enterNameToPredict"))}</div></section>`;
+        const predicted = state.matches.filter((m) => m.prediction), finished = state.matches.filter((m) => isFinishedMatch(m) && m.prediction);
+        const totalPoints = predicted.reduce((sum, m) => sum + Number(m.prediction?.points ?? 0), 0);
+        const exact = predicted.filter((m) => Number(m.prediction?.points) === 2).length, outcome = predicted.filter((m) => Number(m.prediction?.points) === 1).length;
+        const missing = state.matches.filter((m) => isFutureScheduledMatch(m) && !m.prediction).slice(0,8);
+        return `<section class="stat-grid">${renderStat(t("myPredictions"), `${predicted.length}/${state.matches.length || 0}`)}${renderStat(t("points"), totalPoints)}${renderStat(t("exact"), exact)}${renderStat(t("outcome"), outcome)}</section><section class="grid-2" style="margin-top:16px;"><div class="panel"><div class="panel-header"><div class="panel-title"><h2>${escapeHtml(t("missingPredictions"))}</h2></div></div><div class="panel-body match-list">${missing.map(renderMatchCard).join("") || empty(t("noRows"))}</div></div><div class="panel"><div class="panel-header"><div class="panel-title"><h2>${escapeHtml(t("recentResults"))}</h2></div></div><div class="panel-body match-list">${finished.slice(0,8).map(renderMatchCard).join("") || empty(t("noRows"))}</div></div></section>`;
       }
 
-      function getTeamFlag(name) {
-        const teamName = String(name || "").trim();
-        return TEAM_FLAGS[teamName] || "⚽";
+      function renderAdminPage() {
+        return `<section class="panel"><div class="panel-header"><div class="panel-title"><h2>${escapeHtml(t("adminTools"))}</h2><span>${escapeHtml(t("adminNote"))}</span></div></div><div class="panel-body stack"><button type="button" data-fetch-results>${escapeHtml(t("fetchResults"))}</button><div class="muted">This keeps your existing admin flow: enter the admin PIN, call the existing Edge Function, upsert official matches, then recalculate points.</div></div></section>`;
       }
 
-      function renderLeaderboard(rows) {
-        if (rows.length === 0) {
-          els.leaderboardList.innerHTML = '<div class="empty">No members yet.</div>';
-          return;
-        }
-
-        els.leaderboardList.innerHTML = rows.map((row, index) => `
-          <div class="leader-row">
-            <div class="rank">${index + 1}</div>
-            <div>
-              <div class="leader-name">${escapeHtml(row.display_name || "Player")}</div>
-              <div class="leader-meta">${row.predictions_count} predictions · ${row.exact_scores} exact · ${row.correct_outcomes} outcome</div>
-            </div>
-            <div class="points">${row.total_points}</div>
-          </div>
-        `).join("");
+      function handleClick(event) {
+        const page = event.target.closest("[data-page]"); if (page) { state.activePage = page.dataset.page; renderApp(); return; }
+        const save = event.target.closest("[data-save-match]"); if (save) { savePrediction(save.dataset.saveMatch); return; }
+        const open = event.target.closest("[data-open-match]"); if (open) { openPredictionModal(open.dataset.openMatch); return; }
+        const fetch = event.target.closest("[data-fetch-results]"); if (fetch) fetchOfficialResults(fetch);
       }
+
+      function handleInput(event) {
+        const field = event.target.closest("[data-filter]"); if (!field) return;
+        state.filters[field.dataset.filter] = field.value; renderApp();
+      }
+
+      function openPredictionModal(matchId) {
+        const match = state.matches.find((item) => String(item.football_data_id) === String(matchId)); if (!match) return;
+        state.activeMatchId = matchId; els.modalTitle.textContent = `${localizedTeamName(match.home_team_name)} vs ${localizedTeamName(match.away_team_name)}`; els.modalSubtitle.textContent = formatDateTime(new Date(match.utc_date)); els.modalBody.innerHTML = renderMatchCard(match); els.predictionModal.classList.add("show");
+      }
+
+      function closePredictionModal() { state.activeMatchId = null; els.predictionModal.classList.remove("show"); els.modalBody.innerHTML = ""; }
 
       async function savePrediction(matchId) {
         clearMessage();
-
-        if (!state.player) {
-          setMessage("Enter your name before saving predictions.", "error");
-          showNameForm();
-          return;
-        }
-
+        if (!state.player) { setMessage(t("enterNameFirst"), "error"); showNameForm(); return; }
         const match = state.matches.find((item) => String(item.football_data_id) === String(matchId));
-        if (!match || !isPredictionOpen(match)) {
-          setMessage("This match is locked.", "error");
-          await loadMatches();
-          return;
-        }
-
-        const homeInput = document.querySelector(`[data-home-score="${matchId}"]`);
-        const awayInput = document.querySelector(`[data-away-score="${matchId}"]`);
-        const homeScore = readScore(homeInput);
-        const awayScore = readScore(awayInput);
-
-        if (homeScore === null || awayScore === null) {
-          setMessage("Scores must be whole numbers from 0 to 99.", "error");
-          return;
-        }
-
-        const button = document.querySelector(`[data-save-match="${matchId}"]`);
-        setBusy(button, true, "Saving...");
-
+        if (!match || !isPredictionOpen(match)) { setMessage(t("lockedMatch"), "error"); await loadMatches(); return; }
+        const homeScore = readScore(document.querySelector(`[data-home-score="${matchId}"]`));
+        const awayScore = readScore(document.querySelector(`[data-away-score="${matchId}"]`));
+        if (homeScore === null || awayScore === null) { setMessage(t("invalidScore"), "error"); return; }
+        const buttons = document.querySelectorAll(`[data-save-match="${matchId}"]`); buttons.forEach((button) => setBusy(button, true, t("saving")));
         try {
-          const { error } = await state.client.rpc("save_guest_prediction", {
-            p_guest_id: state.player.id,
-            p_edit_token: state.player.editToken,
-            p_display_name: state.player.displayName,
-            p_match_id: Number(matchId),
-            p_home_score: homeScore,
-            p_away_score: awayScore,
-          });
-
+          const { error } = await state.client.rpc("save_guest_prediction", { p_guest_id: state.player.id, p_edit_token: state.player.editToken, p_display_name: state.player.displayName, p_match_id: Number(matchId), p_home_score: homeScore, p_away_score: awayScore });
           if (error) throw error;
-          setMessage("Prediction saved.", "success");
+          setMessage(t("predictionSaved"), "success");
           await Promise.all([loadMatches(), loadLeaderboard()]);
+          if (state.activeMatchId) openPredictionModal(state.activeMatchId);
         } catch (error) {
-          setMessage(error.message || "Could not save prediction.", "error");
-          await loadMatches();
+          setMessage(error.message || "Could not save prediction.", "error"); await loadMatches();
         } finally {
-          setBusy(button, false, "Save");
+          buttons.forEach((button) => setBusy(button, false, t("save")));
         }
       }
 
-      async function fetchOfficialResults() {
+      async function fetchOfficialResults(button) {
         clearMessage();
-
-        const adminPin = window.prompt("Admin PIN");
-        if (!adminPin) return;
-
-        setBusy(els.fetchMatchesButton, true, "Fetching...");
-
+        const adminPin = window.prompt("Admin PIN"); if (!adminPin) return;
+        setBusy(button, true, t("saving"));
         try {
-          const { data, error } = await state.client.functions.invoke("fetch-matches", {
-            body: { season: WORLD_CUP_SEASON },
-            headers: { "x-admin-pin": adminPin },
-          });
-
+          const { data, error } = await state.client.functions.invoke("fetch-matches", { body: { season: WORLD_CUP_SEASON }, headers: { "x-admin-pin": adminPin } });
           if (error) throw error;
           setMessage(`Official results refreshed. ${data?.upserted ?? 0} matches upserted.`, "success");
           await Promise.all([loadMatches(), loadLeaderboard()]);
         } catch (error) {
           setMessage(error.message || "Could not fetch official results.", "error");
-        } finally {
-          setBusy(els.fetchMatchesButton, false, "Fetch official results");
-        }
+        } finally { setBusy(button, false, t("fetchResults")); }
       }
 
-      function isPredictionOpen(match) {
-        return Boolean(
-          state.player &&
-          match.status === "SCHEDULED" &&
-          new Date(match.utc_date).getTime() > Date.now(),
-        );
+      function filteredMatches() {
+        return state.matches.filter((m) => {
+          const group = extractGroup(m), status = statusGroup(m), stage = isGroupStage(m) ? "group" : "knockout", date = localDateKey(new Date(m.utc_date));
+          const search = state.filters.search.trim().toLowerCase();
+          const names = `${m.home_team_name} ${m.away_team_name} ${localizedTeamName(m.home_team_name)} ${localizedTeamName(m.away_team_name)}`.toLowerCase();
+          return (state.filters.group === "all" || group === state.filters.group) && (state.filters.status === "all" || status === state.filters.status) && (state.filters.stage === "all" || stage === state.filters.stage) && (state.filters.date === "all" || date === state.filters.date) && (!search || names.includes(search));
+        });
       }
 
-      function predictionLockReason(match) {
-        if (!state.player) return "Enter your name to predict";
-        if (match.status !== "SCHEDULED") return "Locked by match status";
-        if (new Date(match.utc_date).getTime() <= Date.now()) return "Locked after kickoff";
-        return "Open until kickoff";
+      function computeGroupStandings() {
+        const standings = {};
+        GROUP_ORDER.forEach((g) => standings[g] = groupTeams[g].map((team) => ({ team, played:0, goalsFor:0, goalsAgainst:0, goalDifference:0, points:0 })));
+        state.matches.filter((m) => isGroupStage(m) && isFinishedMatch(m) && hasFinalScore(m)).forEach((m) => {
+          const g = extractGroup(m); if (!g || !standings[g]) return;
+          const h = getStandingRow(standings[g], m.home_team_name), a = getStandingRow(standings[g], m.away_team_name); if (!h || !a) return;
+          const hs = Number(m.score_home), as = Number(m.score_away); h.played++; a.played++; h.goalsFor += hs; h.goalsAgainst += as; a.goalsFor += as; a.goalsAgainst += hs;
+          if (hs > as) h.points += 3; else if (hs < as) a.points += 3; else { h.points++; a.points++; }
+          h.goalDifference = h.goalsFor - h.goalsAgainst; a.goalDifference = a.goalsFor - a.goalsAgainst;
+        });
+        Object.keys(standings).forEach((g) => standings[g].sort((a,b) => b.points - a.points || b.goalDifference - a.goalDifference || b.goalsFor - a.goalsFor || localizedTeamName(a.team).localeCompare(localizedTeamName(b.team))));
+        return standings;
       }
 
-      function readScore(input) {
-        const value = input?.value.trim() ?? "";
-        if (!/^\d{1,2}$/.test(value)) return null;
-        const score = Number(value);
-        return Number.isInteger(score) && score >= 0 && score <= 99 ? score : null;
-      }
+      function getStandingRow(rows, name) { const n = normalizeTeam(name); return rows.find((r) => normalizeTeam(r.team) === n); }
+      function appStats() { return { predictions: state.leaderboard.reduce((s,r) => s + Number(r.predictions_count ?? 0), 0), finished: state.matches.filter(isFinishedMatch).length, open: state.matches.filter(isFutureScheduledMatch).length, top: state.leaderboard[0]?.display_name || "-" }; }
+      function nextMatch() { return state.matches.find(isFutureScheduledMatch) || null; }
+      function isPredictionOpen(m) { return Boolean(state.player && m.status === "SCHEDULED" && new Date(m.utc_date).getTime() > Date.now()); }
+      function isFutureScheduledMatch(m) { return m.status === "SCHEDULED" && new Date(m.utc_date).getTime() > Date.now(); }
+      function isLiveMatch(m) { return ["IN_PLAY","PAUSED","EXTRA_TIME","PENALTY_SHOOTOUT"].includes(String(m.status || "").toUpperCase()); }
+      function isFinishedMatch(m) { return hasFinalScore(m) || ["FINISHED","FULL_TIME","AWARDED"].includes(String(m.status || "").toUpperCase()); }
+      function hasFinalScore(m) { return isScoreValue(m.score_home) && isScoreValue(m.score_away); }
+      function isScoreValue(v) { return v !== null && v !== undefined && v !== "" && Number.isFinite(Number(v)); }
+      function statusGroup(m) { if (isLiveMatch(m)) return "live"; if (isFinishedMatch(m)) return "finished"; return "upcoming"; }
+      function predictionLockReason(m) { if (!state.player) return t("enterNameToPredict"); if (m.status !== "SCHEDULED") return t("lockedByStatus"); if (new Date(m.utc_date).getTime() <= Date.now()) return t("lockedAfterKickoff"); return t("openUntilKickoff"); }
+      function isGroupStage(m) { const stage = normalizeStage(m.stage); return Boolean(extractGroup(m)) || stage.includes("group"); }
+      function extractGroup(m) { const raw = String(m.group_name || "").toUpperCase(); return raw.match(/[A-L]$/)?.[0] || raw.match(/GROUP_?([A-L])/)?.[1] || teamMeta[m.home_team_name]?.[2] || null; }
+      function stageLabel(m) { return isGroupStage(m) ? `${t("group")} ${extractGroup(m) || ""}`.trim() : String(m.stage || t("bracket")).replaceAll("_", " "); }
+      function normalizeStage(v) { return String(v || "").toLowerCase().replaceAll("_", " ").replace(/[^a-z0-9 ]/g, "").trim(); }
+      function localizedTeamName(name) { if (!name || name === "TBD") return t("tbd"); return state.lang === "ar" ? teamMeta[name]?.[0] || name : name; }
+      function teamFlag(name) { return teamMeta[name]?.[1] || "⚽"; }
+      function normalizeTeam(name) { return String(name || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\bturkey\b/g, "turkiye").replace(/\busa\b/g, "united states").replace(/\bcote d'ivoire\b/g, "ivory coast").replace(/[^a-z0-9]+/g, " ").trim(); }
+      function formatPrediction(p) { return `${Number(p.home_score)} - ${Number(p.away_score)}`; }
+      function readScore(input) { const v = input?.value.trim() ?? ""; if (!/^\d{1,2}$/.test(v)) return null; const n = Number(v); return Number.isInteger(n) && n >= 0 && n <= 99 ? n : null; }
+      function normalizeDisplayName(v) { const name = String(v ?? "").replace(/\s+/g, " ").trim(); return name.length >= 2 && name.length <= 40 ? name : ""; }
+      function randomToken() { const bytes = new Uint8Array(32); crypto.getRandomValues(bytes); return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join(""); }
 
-      function normalizeDisplayName(value) {
-        const name = String(value ?? "").replace(/\s+/g, " ").trim();
-        if (name.length < 2 || name.length > 40) return "";
-        return name;
-      }
+      function resetCountdownTimer() { clearCountdownTimer(); const expired = updateCountdowns(); if (expired) return; if (document.querySelector("[data-countdown]")) state.countdownTimer = window.setInterval(updateCountdowns, 1000); }
+      function clearCountdownTimer() { if (!state.countdownTimer) return; window.clearInterval(state.countdownTimer); state.countdownTimer = null; }
+      function updateCountdowns() { const nodes = Array.from(document.querySelectorAll("[data-countdown]")); let expired = false; nodes.forEach((node) => { const ms = Number(node.dataset.kickoffMs) - Date.now(); if (!Number.isFinite(ms) || ms <= 0) { expired = true; node.textContent = t("lockedAfterKickoff"); return; } node.textContent = formatCountdown(ms); }); if (expired) renderApp(); return expired; }
+      function formatCountdown(ms) { const total = Math.max(0, Math.floor(ms / 1000)), d = Math.floor(total / 86400), h = Math.floor((total % 86400) / 3600), m = Math.floor((total % 3600) / 60), s = total % 60; return `${t("startsIn")} ${d ? `${d}d ` : ""}${h}h ${m}m ${s}s`; }
+      function localDateKey(date) { return new Intl.DateTimeFormat("en-CA", { timeZone: DATE_TIME_ZONE, year:"numeric", month:"2-digit", day:"2-digit" }).format(date); }
+      function formatDateHeading(key) { const today = localDateKey(new Date()); if (key === today) return t("today"); if (key === shiftDateKey(today, 1)) return t("tomorrow"); const [y,m,d] = key.split("-").map(Number); return new Intl.DateTimeFormat(state.lang === "ar" ? "ar" : "en-GB", { timeZone:"UTC", weekday:"long", day:"numeric", month:"long" }).format(new Date(Date.UTC(y, m - 1, d, 12))).replace(",", ""); }
+      function shiftDateKey(key, days) { const [y,m,d] = key.split("-").map(Number), dt = new Date(Date.UTC(y, m - 1, d + days, 12)); return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth()+1).padStart(2,"0")}-${String(dt.getUTCDate()).padStart(2,"0")}`; }
+      function formatDateTime(date) { return new Intl.DateTimeFormat(state.lang === "ar" ? "ar" : "en", { timeZone: DATE_TIME_ZONE, weekday:"short", month:"short", day:"numeric", hour:"2-digit", minute:"2-digit" }).format(date); }
 
-      function randomToken() {
-        const bytes = new Uint8Array(32);
-        crypto.getRandomValues(bytes);
-        return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
-      }
-
-      function updateDateLabels() {
-        els.dateLabel.textContent = `${formatDateHeading(getMeccaDateKey(new Date()))} in Mecca time`;
-        els.matchWindowLabel.textContent = "All matches in Asia/Riyadh time";
-      }
-
-      function getMeccaDateKey(date) {
-        return new Intl.DateTimeFormat("en-CA", {
-          timeZone: MECCA_TIME_ZONE,
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-        }).format(date);
-      }
-
-      function formatDateHeading(dateKey) {
-        const todayKey = getMeccaDateKey(new Date());
-        if (dateKey === todayKey) return "Today";
-        if (dateKey === shiftDateKey(todayKey, 1)) return "Tomorrow";
-
-        const [year, month, day] = dateKey.split("-").map(Number);
-        return new Intl.DateTimeFormat("en-GB", {
-          timeZone: "UTC",
-          weekday: "long",
-          day: "numeric",
-          month: "long",
-        }).format(new Date(Date.UTC(year, month - 1, day, 12))).replace(",", "");
-      }
-
-      function shiftDateKey(dateKey, days) {
-        const [year, month, day] = dateKey.split("-").map(Number);
-        const shifted = new Date(Date.UTC(year, month - 1, day + days, 12));
-        const shiftedYear = shifted.getUTCFullYear();
-        const shiftedMonth = String(shifted.getUTCMonth() + 1).padStart(2, "0");
-        const shiftedDay = String(shifted.getUTCDate()).padStart(2, "0");
-        return `${shiftedYear}-${shiftedMonth}-${shiftedDay}`;
-      }
-
-      function formatMeccaTime(date) {
-        return new Intl.DateTimeFormat("en", {
-          timeZone: MECCA_TIME_ZONE,
-          hour: "2-digit",
-          minute: "2-digit",
-        }).format(date);
-      }
-
-      function setBusy(button, busy, label) {
-        if (!button) return;
-        button.disabled = busy;
-        button.textContent = label;
-      }
-
-      function setMessage(message, type = "") {
-        els.globalMessage.textContent = message;
-        els.globalMessage.className = `message show ${type}`.trim();
-      }
-
-      function clearMessage() {
-        els.globalMessage.textContent = "";
-        els.globalMessage.className = "message";
-      }
-
-      function escapeHtml(value) {
-        return String(value ?? "")
-          .replaceAll("&", "&amp;")
-          .replaceAll("<", "&lt;")
-          .replaceAll(">", "&gt;")
-          .replaceAll('"', "&quot;")
-          .replaceAll("'", "&#039;");
-      }
-
-      function escapeAttribute(value) {
-        return escapeHtml(value);
-      }
+      function renderStat(label, value) { return `<div class="stat"><div class="stat-label">${escapeHtml(label)}</div><div class="stat-value">${escapeHtml(value)}</div></div>`; }
+      function empty(message) { return `<div class="empty">${escapeHtml(message)}</div>`; }
+      function setBusy(button, busy, label) { if (!button) return; button.disabled = busy; button.textContent = label; }
+      function setMessage(message, type = "") { els.globalMessage.textContent = message; els.globalMessage.className = `message show ${type}`.trim(); }
+      function clearMessage() { els.globalMessage.textContent = ""; els.globalMessage.className = "message"; }
+      function toggleLanguage() { state.lang = state.lang === "ar" ? "en" : "ar"; localStorage.setItem(LOCAL_LANG_KEY, state.lang); renderApp(); }
+      function applyLanguage() { document.documentElement.lang = state.lang; document.documentElement.dir = state.lang === "ar" ? "rtl" : "ltr"; document.body.dir = document.documentElement.dir; els.languageButton.textContent = state.lang === "ar" ? "English" : "العربية"; document.querySelectorAll("[data-i18n]").forEach((n) => { n.textContent = t(n.dataset.i18n); }); els.nameInput.placeholder = state.lang === "ar" ? "اسم العرض" : "Your display name"; }
+      function t(key) { return translations[state.lang]?.[key] || translations.en[key] || key; }
+      function escapeHtml(value) { return String(value ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"); }
+      function escapeAttribute(value) { return escapeHtml(value); }
     </script>
   </body>
 </html>
