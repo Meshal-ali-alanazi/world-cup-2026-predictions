@@ -24,6 +24,7 @@
         --warning: #f59e0b;
         --info: #38bdf8;
         --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        --hero-bg-image: url("https://example.com/messi.jpg");
       }
 
       * { box-sizing: border-box; }
@@ -180,12 +181,20 @@
       .hero { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.7fr); gap: 16px; }
 
       .hero-card {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
         min-height: 330px;
         border: 1px solid rgba(255, 215, 0, 0.28);
         border-radius: 12px;
-        background:
-          linear-gradient(135deg, rgba(255, 215, 0, 0.18), rgba(30, 58, 95, 0.08)),
-          linear-gradient(180deg, rgba(15, 31, 58, 0.96), rgba(6, 16, 31, 0.92));
+        background-color: rgba(6, 16, 31, 0.95);
+        background-image:
+          linear-gradient(90deg, rgba(6, 16, 31, 0.84), rgba(6, 16, 31, 0.62), rgba(6, 16, 31, 0.78)),
+          linear-gradient(180deg, rgba(0, 0, 0, 0.24), rgba(0, 0, 0, 0.5)),
+          var(--hero-bg-image);
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
@@ -193,8 +202,9 @@
         box-shadow: var(--shadow);
       }
 
+      .hero-card > * { position: relative; z-index: 1; }
       .hero-card h2 { margin: 0; font-size: clamp(32px, 5vw, 60px); line-height: 1; letter-spacing: 0; }
-      .hero-card p { max-width: 650px; margin: 14px 0 0; color: var(--muted); }
+      .hero-card p { max-width: 650px; margin: 14px 0 0; color: rgba(255, 255, 255, 0.78); }
       .hero-actions, .inline-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 
       .stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
