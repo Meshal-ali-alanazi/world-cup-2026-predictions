@@ -597,6 +597,7 @@
       function renderHomePage() {
         const next = nextMatch();
         const stats = appStats();
+        const upcomingPreview = state.matches.filter(isFutureScheduledMatch).slice(0, 5);
         return `
           <section class="hero">
             <div class="hero-card">
@@ -606,7 +607,7 @@
             <div class="panel"><div class="panel-header"><div class="panel-title"><h2>${escapeHtml(t("nextMatch"))}</h2><span>${escapeHtml(t("localTime"))}: ${escapeHtml(DATE_TIME_ZONE)}</span></div></div><div class="panel-body">${next ? renderMatchCard(next) : empty(t("noNextMatch"))}</div></div>
           </section>
           <section class="stat-grid" style="margin-top:16px;">${renderStat(t("totalPredictions"), stats.predictions)}${renderStat(t("matchesPlayed"), stats.finished)}${renderStat(t("topPredictor"), stats.top)}${renderStat(t("openMatches"), stats.open)}</section>
-          <section class="grid-2" style="margin-top:16px;"><div class="panel"><div class="panel-header"><div class="panel-title"><h2>${escapeHtml(t("schedule"))}</h2><span>${escapeHtml(t("upcoming"))}</span></div></div><div class="panel-body match-list">${filteredMatches().slice(0,5).map(renderMatchCard).join("") || empty(t("noMatches"))}</div></div><div class="panel"><div class="panel-header"><div class="panel-title"><h2>${escapeHtml(t("leaderboard"))}</h2><span>${escapeHtml(t("points"))}</span></div></div><div class="panel-body">${renderLeaderboardRows(state.leaderboard.slice(0,6))}</div></div></section>
+          <section class="grid-2" style="margin-top:16px;"><div class="panel"><div class="panel-header"><div class="panel-title"><h2>${escapeHtml(t("schedule"))}</h2><span>${escapeHtml(t("upcoming"))}</span></div></div><div class="panel-body match-list">${upcomingPreview.map(renderMatchCard).join("") || empty(t("noMatches"))}</div></div><div class="panel"><div class="panel-header"><div class="panel-title"><h2>${escapeHtml(t("leaderboard"))}</h2><span>${escapeHtml(t("points"))}</span></div></div><div class="panel-body">${renderLeaderboardRows(state.leaderboard.slice(0,6))}</div></div></section>
         `;
       }
 
