@@ -216,7 +216,7 @@ begin
     select 1
     from public.matches m
     where m.football_data_id = p_match_id
-      and m.status = 'SCHEDULED'
+      and upper(coalesce(m.status, '')) in ('SCHEDULED', 'TIMED')
       and m.utc_date > now()
   ) then
     raise exception 'This match is locked.';
