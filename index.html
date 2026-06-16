@@ -255,7 +255,7 @@
       .panel-title span { color: var(--muted); font-size: 13px; }
       .panel-body { padding: 16px; }
 
-      .auth-box { display: grid; grid-template-columns: minmax(220px, 1fr) auto; gap: 10px; }
+      .auth-box { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(130px, 0.55fr) auto; gap: 10px; }
 
       .hero { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.7fr); gap: 16px; }
 
@@ -424,8 +424,10 @@
           </div>
           <div class="panel-body">
             <form id="authForm" class="auth-box">
-              <input id="nameInput" type="text" autocomplete="name" placeholder="Your display name" minlength="2" maxlength="40" required>
-              <button id="continueButton" type="submit" data-i18n="continue">Continue</button>
+              <input id="nameInput" type="text" list="allowedNamesList" autocomplete="name" placeholder="Your display name" minlength="2" maxlength="40" required>
+              <datalist id="allowedNamesList"></datalist>
+              <input id="pinInput" type="password" inputmode="numeric" autocomplete="current-password" placeholder="Secret PIN" minlength="4" maxlength="12" required>
+              <button id="continueButton" type="submit" data-i18n="continue">دخول</button>
             </form>
             <div id="authError" class="auth-error" role="alert" aria-live="polite"></div>
           </div>
@@ -457,12 +459,28 @@
       const SUPABASE_ANON_KEY = "sb_publishable_BeVUdF56wvidKtUD_lZIWg_iBMP5E_J";
       const WORLD_CUP_SEASON = 2026;
       const LOCAL_PLAYER_KEY = "wc2026_public_player";
+      const LOCAL_PLAYER_NAME_KEY = "wc_predictor_name";
+      const LOCAL_PLAYER_PIN_KEY = "wc_predictor_pin";
+      const LOCAL_PLAYER_UUID_KEY = "wc_predictor_uuid";
+      const LOCAL_PLAYER_TOKEN_KEY = "wc_predictor_token";
       const LOCAL_LANG_KEY = "wc2026_lang";
       const DATE_TIME_ZONE = "Asia/Riyadh";
       const BASIC_MATCH_SELECT = "football_data_id,utc_date,status,stage,group_name,matchday,home_team_name,home_team_tla,away_team_name,away_team_tla,score_home,score_away,raw";
       const EXTENDED_MATCH_SELECT = `${BASIC_MATCH_SELECT},match_number,stadium,city,country,home_penalties,away_penalties,winner`;
-      const ALLOWED_PLAYER_NAMES = ["مشعل", "فهد", "سرور", "فيصل", "محمد", "ابو عبيد المصريه", "سلمان", "سلطوني", "سلطان", "عبد الله"];
-      const ALLOWED_PLAYER_NAME_SET = new Set(ALLOWED_PLAYER_NAMES.map(normalizeAllowedPlayerName));
+      const ALLOWED_NAMES = ["مشعل", "فهد", "سرور", "فيصل", "محمد", "ابو عبيد المصريه", "سلمان", "سلطوني", "سلطان", "عبد الله"];
+      const PLAYER_PINS = {
+        "مشعل": "1234",
+        "فهد": "5678",
+        "سرور": "1111",
+        "فيصل": "2222",
+        "محمد": "3333",
+        "ابو عبيد المصريه": "4444",
+        "سلمان": "5555",
+        "سلطوني": "6666",
+        "سلطان": "7777",
+        "عبد الله": "8888"
+      };
+      const ALLOWED_PLAYER_NAME_MAP = new Map(ALLOWED_NAMES.map((name) => [normalizeAllowedPlayerName(name), name]));
 
       const PAGES = ["home", "schedule", "leaderboard", "groups", "bracket", "dashboard", "admin"];
       const GROUP_ORDER = ["A","B","C","D","E","F","G","H","I","J","K","L"];
@@ -472,7 +490,7 @@
           appTitle: "World Cup 2026 Predictions", appSubtitle: "Predict every match, follow the table, and climb the live leaderboard.",
           home: "Home", schedule: "Matches", leaderboard: "Leaderboard", groups: "Groups", bracket: "Bracket", dashboard: "Dashboard", admin: "Admin",
           refresh: "Refresh", changeName: "Change name", chooseName: "Choose your name", noEmail: "No email required. Your browser stores your edit token.",
-          continue: "Continue", close: "Close", predictNow: "Predict Now", viewSchedule: "View Schedule", viewLeaderboard: "Leaderboard",
+          continue: "Login", close: "Close", predictNow: "Predict Now", viewSchedule: "View Schedule", viewLeaderboard: "Leaderboard",
           nextMatch: "Next match", noNextMatch: "No upcoming match is loaded.", totalPredictions: "Total predictions", matchesPlayed: "Matches played",
           topPredictor: "Top predictor", openMatches: "Open matches", allGroups: "All groups", allStages: "All stages", allStatuses: "All statuses",
           search: "Search teams", allDates: "All dates", upcoming: "Upcoming", live: "Live", finished: "Finished", locked: "Locked",
@@ -490,7 +508,7 @@
           appTitle: "توقعات كأس العالم 2026", appSubtitle: "توقع نتائج المباريات، تابع ترتيب المجموعات، وتنافس في لوحة المتصدرين المباشرة.",
           home: "الرئيسية", schedule: "المباريات", leaderboard: "المتصدرين", groups: "المجموعات", bracket: "الأدوار الإقصائية", dashboard: "لوحتي", admin: "الإدارة",
           refresh: "تحديث", changeName: "تغيير الاسم", chooseName: "اختر اسمك", noEmail: "لا تحتاج إلى بريد إلكتروني. يتم حفظ رمز التعديل في هذا المتصفح.",
-          continue: "متابعة", close: "إغلاق", predictNow: "ابدأ التوقع", viewSchedule: "عرض المباريات", viewLeaderboard: "المتصدرين",
+          continue: "دخول", close: "إغلاق", predictNow: "ابدأ التوقع", viewSchedule: "عرض المباريات", viewLeaderboard: "المتصدرين",
           nextMatch: "المباراة القادمة", noNextMatch: "لا توجد مباراة قادمة محملة.", totalPredictions: "إجمالي التوقعات", matchesPlayed: "المباريات المنتهية",
           topPredictor: "أفضل متوقع", openMatches: "مباريات متاحة", allGroups: "كل المجموعات", allStages: "كل المراحل", allStatuses: "كل الحالات",
           search: "ابحث عن فريق", allDates: "كل التواريخ", upcoming: "قادمة", live: "مباشرة", finished: "منتهية", locked: "مغلقة",
@@ -538,18 +556,22 @@
       document.addEventListener("DOMContentLoaded", init);
 
       async function init() {
-        cacheElements(); bindEvents(); applyLanguage(); renderNavigation();
+        cacheElements(); renderAllowedNameOptions(); bindEvents(); applyLanguage(); renderNavigation();
         if (!isConfigured()) { setMessage("Replace SUPABASE_URL and SUPABASE_ANON_KEY in index.html before deploying.", "error"); renderApp(); return; }
         if (!window.supabase?.createClient) { setMessage("Supabase JS did not load. Check CDN or network access.", "error"); renderApp(); return; }
         state.client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        state.player = loadPlayer();
+        state.player = await loadPlayer();
         await refreshAll();
         state.refreshTimer = window.setInterval(loadMatches, 60000);
         window.addEventListener("beforeunload", () => { clearCountdownTimer(); if (state.refreshTimer) window.clearInterval(state.refreshTimer); });
       }
 
       function cacheElements() {
-        ["authError","authForm","authPanel","closeModalButton","continueButton","globalMessage","languageButton","mainNav","modalBody","modalSubtitle","modalTitle","nameInput","pageRoot","predictionModal","realtimeStatus","refreshButton","signOutButton","userLabel"].forEach((id) => { els[id] = document.getElementById(id); });
+        ["allowedNamesList","authError","authForm","authPanel","closeModalButton","continueButton","globalMessage","languageButton","mainNav","modalBody","modalSubtitle","modalTitle","nameInput","pageRoot","pinInput","predictionModal","realtimeStatus","refreshButton","signOutButton","userLabel"].forEach((id) => { els[id] = document.getElementById(id); });
+      }
+
+      function renderAllowedNameOptions() {
+        els.allowedNamesList.innerHTML = ALLOWED_NAMES.map((name) => `<option value="${escapeAttribute(name)}"></option>`).join("");
       }
 
       function bindEvents() {
@@ -644,15 +666,18 @@
       async function savePlayerName(event) {
         event.preventDefault(); clearMessage(); clearAuthError();
         const rawName = String(els.nameInput.value ?? "").trim();
-        if (!isAllowedPlayerName(rawName)) { setAuthError("الاسم غير مسموح به"); return; }
-        const displayName = normalizeDisplayName(rawName);
+        const pin = String(els.pinInput.value ?? "").trim();
+        const displayName = getAllowedPlayerName(rawName);
+        if (!displayName) { setAuthError("الاسم غير مسموح به"); return; }
+        if (PLAYER_PINS[displayName] !== pin) { setAuthError("الرمز السري خطأ"); return; }
         const current = state.player;
-        state.player = { id: current?.id || crypto.randomUUID(), editToken: current?.editToken || randomToken(), displayName };
         setBusy(els.continueButton, true, t("saving"));
         try {
+          state.player = await buildPlayerCredentials(displayName, pin);
           const { error } = await state.client.rpc("register_guest_player", { p_guest_id: state.player.id, p_edit_token: state.player.editToken, p_display_name: state.player.displayName });
           if (error) throw error;
-          localStorage.setItem(LOCAL_PLAYER_KEY, JSON.stringify(state.player));
+          storePlayer(state.player);
+          els.pinInput.value = "";
           renderIdentity();
           await Promise.all([loadMatches(), loadLeaderboard()]);
           setMessage(t("nameSaved"), "success");
@@ -663,17 +688,23 @@
         }
       }
 
-      function loadPlayer() {
+      async function loadPlayer() {
         try {
-          const player = JSON.parse(localStorage.getItem(LOCAL_PLAYER_KEY) || "null");
-          if (player?.id && player?.editToken && player?.displayName && isAllowedPlayerName(player.displayName)) return player;
-          localStorage.removeItem(LOCAL_PLAYER_KEY);
+          const storedName = localStorage.getItem(LOCAL_PLAYER_NAME_KEY);
+          const storedPinHash = localStorage.getItem(LOCAL_PLAYER_PIN_KEY);
+          const storedId = localStorage.getItem(LOCAL_PLAYER_UUID_KEY);
+          const storedToken = localStorage.getItem(LOCAL_PLAYER_TOKEN_KEY);
+          const displayName = getAllowedPlayerName(storedName);
+          if (!displayName || !storedPinHash || !storedId || !storedToken) { clearStoredPlayer(); return null; }
+          const player = await buildPlayerCredentials(displayName, PLAYER_PINS[displayName]);
+          if (storedPinHash === player.pinHash && storedId === player.id && storedToken === player.editToken) return player;
+          clearStoredPlayer();
           return null;
-        } catch { return null; }
+        } catch { clearStoredPlayer(); return null; }
       }
 
       function showNameForm() {
-        clearMessage(); clearAuthError(); els.authPanel.classList.remove("hide"); els.nameInput.value = state.player?.displayName || ""; window.setTimeout(() => els.nameInput.focus(), 0);
+        clearMessage(); clearAuthError(); els.authPanel.classList.remove("hide"); els.nameInput.value = state.player?.displayName || ""; els.pinInput.value = ""; window.setTimeout(() => els.nameInput.focus(), 0);
       }
 
       function renderIdentity() {
@@ -914,9 +945,54 @@
       function formatPrediction(p) { return `${Number(p.home_score)} - ${Number(p.away_score)}`; }
       function readScore(input) { const v = input?.value.trim() ?? ""; if (!/^\d{1,2}$/.test(v)) return null; const n = Number(v); return Number.isInteger(n) && n >= 0 && n <= 99 ? n : null; }
       function normalizeAllowedPlayerName(name) { return String(name ?? "").trim().toLocaleLowerCase("ar"); }
-      function isAllowedPlayerName(name) { return ALLOWED_PLAYER_NAME_SET.has(normalizeAllowedPlayerName(name)); }
+      function getAllowedPlayerName(name) { return ALLOWED_PLAYER_NAME_MAP.get(normalizeAllowedPlayerName(name)) || ""; }
+      function isAllowedPlayerName(name) { return Boolean(getAllowedPlayerName(name)); }
       function normalizeDisplayName(v) { const name = String(v ?? "").replace(/\s+/g, " ").trim(); return name.length >= 2 && name.length <= 40 ? name : ""; }
       function randomToken() { const bytes = new Uint8Array(32); crypto.getRandomValues(bytes); return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join(""); }
+
+      async function buildPlayerCredentials(displayName, pin) {
+        const normalizedName = normalizeAllowedPlayerName(displayName);
+        const credential = `${normalizedName}:${pin}`;
+        const id = await generatePlayerId(credential);
+        const editToken = await sha256Hex(`wc2026-edit-token:${credential}`);
+        const pinHash = await sha256Hex(`wc2026-pin:${credential}`);
+        return { id, editToken, displayName, pinHash };
+      }
+
+      async function generatePlayerId(credential) {
+        const bytes = await sha256Bytes(`wc2026-player:${credential}`);
+        const uuidBytes = bytes.slice(0, 16);
+        uuidBytes[6] = (uuidBytes[6] & 0x0f) | 0x50;
+        uuidBytes[8] = (uuidBytes[8] & 0x3f) | 0x80;
+        const hex = bytesToHex(uuidBytes);
+        return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;
+      }
+
+      async function sha256Hex(value) {
+        return bytesToHex(await sha256Bytes(value));
+      }
+
+      async function sha256Bytes(value) {
+        if (!globalThis.crypto?.subtle) throw new Error("Secure browser crypto is required for PIN login.");
+        const data = new TextEncoder().encode(value);
+        return new Uint8Array(await globalThis.crypto.subtle.digest("SHA-256", data));
+      }
+
+      function bytesToHex(bytes) {
+        return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+      }
+
+      function storePlayer(player) {
+        localStorage.setItem(LOCAL_PLAYER_NAME_KEY, player.displayName);
+        localStorage.setItem(LOCAL_PLAYER_PIN_KEY, player.pinHash);
+        localStorage.setItem(LOCAL_PLAYER_UUID_KEY, player.id);
+        localStorage.setItem(LOCAL_PLAYER_TOKEN_KEY, player.editToken);
+        localStorage.setItem(LOCAL_PLAYER_KEY, JSON.stringify({ id: player.id, editToken: player.editToken, displayName: player.displayName }));
+      }
+
+      function clearStoredPlayer() {
+        [LOCAL_PLAYER_KEY, LOCAL_PLAYER_NAME_KEY, LOCAL_PLAYER_PIN_KEY, LOCAL_PLAYER_UUID_KEY, LOCAL_PLAYER_TOKEN_KEY].forEach((key) => localStorage.removeItem(key));
+      }
 
       function resetCountdownTimer() { clearCountdownTimer(); const expired = updateCountdowns(); if (expired) return; if (document.querySelector("[data-countdown]")) state.countdownTimer = window.setInterval(updateCountdowns, 1000); }
       function clearCountdownTimer() { if (!state.countdownTimer) return; window.clearInterval(state.countdownTimer); state.countdownTimer = null; }
@@ -935,7 +1011,7 @@
       function setMessage(message, type = "") { els.globalMessage.textContent = message; els.globalMessage.className = `message show ${type}`.trim(); }
       function clearMessage() { els.globalMessage.textContent = ""; els.globalMessage.className = "message"; }
       function toggleLanguage() { state.lang = state.lang === "ar" ? "en" : "ar"; localStorage.setItem(LOCAL_LANG_KEY, state.lang); renderApp(); }
-      function applyLanguage() { document.documentElement.lang = state.lang; document.documentElement.dir = state.lang === "ar" ? "rtl" : "ltr"; document.body.dir = document.documentElement.dir; els.languageButton.textContent = state.lang === "ar" ? "English" : "العربية"; document.querySelectorAll("[data-i18n]").forEach((n) => { n.textContent = t(n.dataset.i18n); }); els.nameInput.placeholder = state.lang === "ar" ? "اسم العرض" : "Your display name"; }
+      function applyLanguage() { document.documentElement.lang = state.lang; document.documentElement.dir = state.lang === "ar" ? "rtl" : "ltr"; document.body.dir = document.documentElement.dir; els.languageButton.textContent = state.lang === "ar" ? "English" : "العربية"; document.querySelectorAll("[data-i18n]").forEach((n) => { n.textContent = t(n.dataset.i18n); }); els.nameInput.placeholder = state.lang === "ar" ? "الاسم" : "Name"; els.pinInput.placeholder = state.lang === "ar" ? "الرمز السري" : "Secret PIN"; }
       function t(key) { return translations[state.lang]?.[key] || translations.en[key] || key; }
       function escapeHtml(value) { return String(value ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"); }
       function escapeAttribute(value) { return escapeHtml(value); }
