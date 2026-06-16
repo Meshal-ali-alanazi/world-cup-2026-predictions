@@ -109,49 +109,9 @@
         background-repeat: no-repeat;
       }
 
-      .login-hero::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        z-index: 0;
-        background: rgba(0, 0, 0, 0.6);
-      }
-
-      .login-hero .shell {
-        position: relative;
-        z-index: 1;
-        padding: clamp(24px, 4vw, 46px) 0;
-      }
-
-      .login-hero .brand h1,
-      .login-hero .panel-title h2 {
-        color: #ffffff;
-      }
-
-      .login-hero .brand p,
-      .login-hero .panel-title span {
-        color: rgba(255, 255, 255, 0.84);
-      }
-
-      .login-hero .panel {
-        border-color: rgba(255, 255, 255, 0.24);
-        background: rgba(0, 0, 0, 0.42);
-        backdrop-filter: blur(8px);
-      }
-
-      .login-hero input {
-        border-color: rgba(255, 255, 255, 0.34);
-        background: rgba(255, 255, 255, 0.14);
-        color: #ffffff;
-      }
-
-      .login-hero input::placeholder {
-        color: rgba(255, 255, 255, 0.72);
-      }
-
       .auth-panel {
         max-width: 760px;
-        margin-top: 18px;
+        margin-bottom: 18px;
       }
 
       .auth-error {
@@ -398,44 +358,38 @@
     </style>
   </head>
   <body>
-    <section class="login-hero">
-      <div class="shell">
-        <header class="topbar">
-          <div class="brand">
-            <div class="brand-mark">🏆 FIFA World Cup 2026</div>
-            <h1>⚽ توقعات كأس العالم 2026</h1>
-            <p data-i18n="appSubtitle">Predict every match, follow the table, and climb the live leaderboard.</p>
-          </div>
-          <div class="top-actions">
-            <span id="realtimeStatus" class="pill">Realtime idle</span>
-            <span id="userLabel" class="pill">No name</span>
-            <button id="languageButton" class="secondary" type="button">العربية</button>
-            <button id="refreshButton" class="secondary" type="button" data-i18n="refresh">Refresh</button>
-            <button id="signOutButton" class="secondary hide" type="button" data-i18n="changeName">Change name</button>
-          </div>
-        </header>
-
-        <section id="authPanel" class="panel auth-panel">
-          <div class="panel-header">
-            <div class="panel-title">
-              <h2 data-i18n="chooseName">Choose your name</h2>
-              <span data-i18n="noEmail">No email required. Your browser stores your edit token.</span>
-            </div>
-          </div>
-          <div class="panel-body">
-            <form id="authForm" class="auth-box">
-              <input id="nameInput" type="text" list="allowedNamesList" autocomplete="name" placeholder="Your display name" minlength="2" maxlength="40" required>
-              <datalist id="allowedNamesList"></datalist>
-              <input id="pinInput" type="password" inputmode="numeric" autocomplete="current-password" placeholder="Secret PIN" minlength="4" maxlength="12" required>
-              <button id="continueButton" type="submit" data-i18n="continue">دخول</button>
-            </form>
-            <div id="authError" class="auth-error" role="alert" aria-live="polite"></div>
-          </div>
-        </section>
-      </div>
-    </section>
+    <section class="login-hero" aria-label="Messi hero image"></section>
 
     <div class="shell app-shell">
+      <header class="topbar">
+        <div class="brand"></div>
+        <div class="top-actions">
+          <span id="realtimeStatus" class="pill">Realtime idle</span>
+          <span id="userLabel" class="pill">No name</span>
+          <button id="languageButton" class="secondary" type="button">العربية</button>
+          <button id="refreshButton" class="secondary" type="button" data-i18n="refresh">Refresh</button>
+          <button id="signOutButton" class="secondary hide" type="button" data-i18n="changeName">Change name</button>
+        </div>
+      </header>
+
+      <section id="authPanel" class="panel auth-panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <h2 data-i18n="chooseName">Choose your name</h2>
+            <span data-i18n="noEmail">No email required. Your browser stores your edit token.</span>
+          </div>
+        </div>
+        <div class="panel-body">
+          <form id="authForm" class="auth-box">
+            <input id="nameInput" type="text" list="allowedNamesList" autocomplete="name" placeholder="Your display name" minlength="2" maxlength="40" required>
+            <datalist id="allowedNamesList"></datalist>
+            <input id="pinInput" type="password" inputmode="numeric" autocomplete="current-password" placeholder="Secret PIN" minlength="4" maxlength="12" required>
+            <button id="continueButton" type="submit" data-i18n="continue">دخول</button>
+          </form>
+          <div id="authError" class="auth-error" role="alert" aria-live="polite"></div>
+        </div>
+      </section>
+
       <nav id="mainNav" class="nav" aria-label="Primary navigation"></nav>
       <div id="globalMessage" class="message"></div>
       <main id="pageRoot" style="margin-top: 18px;"></main>
