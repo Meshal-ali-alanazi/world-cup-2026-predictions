@@ -24,7 +24,9 @@
         --warning: #f59e0b;
         --info: #38bdf8;
         --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-        --hero-bg-image: url("./assets/messi-hero.webp");
+        /* Replace this URL with your uploaded Messi image URL.
+           To embed directly, use: url("data:image/jpeg;base64,PASTE_BASE64_HERE") */
+        --hero-bg-image: url("https://example.com/messi.jpg");
       }
 
       * { box-sizing: border-box; }
@@ -93,6 +95,83 @@
         width: min(1240px, calc(100% - 32px));
         margin: 0 auto;
         padding: 24px 0 48px;
+      }
+
+      .login-hero {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        min-height: 360px;
+        color: #ffffff;
+        background-image: var(--hero-bg-image);
+        background-size: cover;
+        background-position: center top;
+        background-repeat: no-repeat;
+      }
+
+      .login-hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        background: rgba(0, 0, 0, 0.6);
+      }
+
+      .login-hero .shell {
+        position: relative;
+        z-index: 1;
+        padding: clamp(24px, 4vw, 46px) 0;
+      }
+
+      .login-hero .brand h1,
+      .login-hero .panel-title h2 {
+        color: #ffffff;
+      }
+
+      .login-hero .brand p,
+      .login-hero .panel-title span {
+        color: rgba(255, 255, 255, 0.84);
+      }
+
+      .login-hero .panel {
+        border-color: rgba(255, 255, 255, 0.24);
+        background: rgba(0, 0, 0, 0.42);
+        backdrop-filter: blur(8px);
+      }
+
+      .login-hero input {
+        border-color: rgba(255, 255, 255, 0.34);
+        background: rgba(255, 255, 255, 0.14);
+        color: #ffffff;
+      }
+
+      .login-hero input::placeholder {
+        color: rgba(255, 255, 255, 0.72);
+      }
+
+      .auth-panel {
+        max-width: 760px;
+        margin-top: 18px;
+      }
+
+      .auth-error {
+        display: none;
+        margin-top: 10px;
+        border: 1px solid rgba(239, 68, 68, 0.5);
+        border-radius: 8px;
+        background: rgba(239, 68, 68, 0.16);
+        color: #fecaca;
+        font-size: 14px;
+        font-weight: 800;
+        padding: 10px 12px;
+      }
+
+      .auth-error.show {
+        display: block;
+      }
+
+      .app-shell {
+        padding-top: 18px;
       }
 
       .topbar {
@@ -319,40 +398,44 @@
     </style>
   </head>
   <body>
-    <div class="shell">
-      <header class="topbar">
-        <div class="brand">
-          <div class="brand-mark">🏆 FIFA World Cup 2026</div>
-          <h1 data-i18n="appTitle">World Cup 2026 Predictions</h1>
-          <p data-i18n="appSubtitle">Predict every match, follow the table, and climb the live leaderboard.</p>
-        </div>
-        <div class="top-actions">
-          <span id="realtimeStatus" class="pill">Realtime idle</span>
-          <span id="userLabel" class="pill">No name</span>
-          <button id="languageButton" class="secondary" type="button">العربية</button>
-          <button id="refreshButton" class="secondary" type="button" data-i18n="refresh">Refresh</button>
-          <button id="signOutButton" class="secondary hide" type="button" data-i18n="changeName">Change name</button>
-        </div>
-      </header>
+    <section class="login-hero">
+      <div class="shell">
+        <header class="topbar">
+          <div class="brand">
+            <div class="brand-mark">🏆 FIFA World Cup 2026</div>
+            <h1>⚽ توقعات كأس العالم 2026</h1>
+            <p data-i18n="appSubtitle">Predict every match, follow the table, and climb the live leaderboard.</p>
+          </div>
+          <div class="top-actions">
+            <span id="realtimeStatus" class="pill">Realtime idle</span>
+            <span id="userLabel" class="pill">No name</span>
+            <button id="languageButton" class="secondary" type="button">العربية</button>
+            <button id="refreshButton" class="secondary" type="button" data-i18n="refresh">Refresh</button>
+            <button id="signOutButton" class="secondary hide" type="button" data-i18n="changeName">Change name</button>
+          </div>
+        </header>
 
+        <section id="authPanel" class="panel auth-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <h2 data-i18n="chooseName">Choose your name</h2>
+              <span data-i18n="noEmail">No email required. Your browser stores your edit token.</span>
+            </div>
+          </div>
+          <div class="panel-body">
+            <form id="authForm" class="auth-box">
+              <input id="nameInput" type="text" autocomplete="name" placeholder="Your display name" minlength="2" maxlength="40" required>
+              <button id="continueButton" type="submit" data-i18n="continue">Continue</button>
+            </form>
+            <div id="authError" class="auth-error" role="alert" aria-live="polite"></div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <div class="shell app-shell">
       <nav id="mainNav" class="nav" aria-label="Primary navigation"></nav>
       <div id="globalMessage" class="message"></div>
-
-      <section id="authPanel" class="panel">
-        <div class="panel-header">
-          <div class="panel-title">
-            <h2 data-i18n="chooseName">Choose your name</h2>
-            <span data-i18n="noEmail">No email required. Your browser stores your edit token.</span>
-          </div>
-        </div>
-        <div class="panel-body">
-          <form id="authForm" class="auth-box">
-            <input id="nameInput" type="text" autocomplete="name" placeholder="Your display name" minlength="2" maxlength="40" required>
-            <button id="continueButton" type="submit" data-i18n="continue">Continue</button>
-          </form>
-        </div>
-      </section>
-
       <main id="pageRoot" style="margin-top: 18px;"></main>
     </div>
 
@@ -378,6 +461,8 @@
       const DATE_TIME_ZONE = "Asia/Riyadh";
       const BASIC_MATCH_SELECT = "football_data_id,utc_date,status,stage,group_name,matchday,home_team_name,home_team_tla,away_team_name,away_team_tla,score_home,score_away,raw";
       const EXTENDED_MATCH_SELECT = `${BASIC_MATCH_SELECT},match_number,stadium,city,country,home_penalties,away_penalties,winner`;
+      const ALLOWED_PLAYER_NAMES = ["مشعل", "فهد", "سرور", "فيصل", "محمد", "ابو عبيد المصريه", "سلمان", "سلطوني", "سلطان", "عبد الله"];
+      const ALLOWED_PLAYER_NAME_SET = new Set(ALLOWED_PLAYER_NAMES.map(normalizeAllowedPlayerName));
 
       const PAGES = ["home", "schedule", "leaderboard", "groups", "bracket", "dashboard", "admin"];
       const GROUP_ORDER = ["A","B","C","D","E","F","G","H","I","J","K","L"];
@@ -464,7 +549,7 @@
       }
 
       function cacheElements() {
-        ["authForm","authPanel","closeModalButton","continueButton","globalMessage","languageButton","mainNav","modalBody","modalSubtitle","modalTitle","nameInput","pageRoot","predictionModal","realtimeStatus","refreshButton","signOutButton","userLabel"].forEach((id) => { els[id] = document.getElementById(id); });
+        ["authError","authForm","authPanel","closeModalButton","continueButton","globalMessage","languageButton","mainNav","modalBody","modalSubtitle","modalTitle","nameInput","pageRoot","predictionModal","realtimeStatus","refreshButton","signOutButton","userLabel"].forEach((id) => { els[id] = document.getElementById(id); });
       }
 
       function bindEvents() {
@@ -557,9 +642,10 @@
       }
 
       async function savePlayerName(event) {
-        event.preventDefault(); clearMessage();
-        const displayName = normalizeDisplayName(els.nameInput.value);
-        if (!displayName) { setMessage("Enter a name from 2 to 40 characters.", "error"); return; }
+        event.preventDefault(); clearMessage(); clearAuthError();
+        const rawName = String(els.nameInput.value ?? "").trim();
+        if (!isAllowedPlayerName(rawName)) { setAuthError("الاسم غير مسموح به"); return; }
+        const displayName = normalizeDisplayName(rawName);
         const current = state.player;
         state.player = { id: current?.id || crypto.randomUUID(), editToken: current?.editToken || randomToken(), displayName };
         setBusy(els.continueButton, true, t("saving"));
@@ -580,12 +666,14 @@
       function loadPlayer() {
         try {
           const player = JSON.parse(localStorage.getItem(LOCAL_PLAYER_KEY) || "null");
-          return player?.id && player?.editToken && player?.displayName ? player : null;
+          if (player?.id && player?.editToken && player?.displayName && isAllowedPlayerName(player.displayName)) return player;
+          localStorage.removeItem(LOCAL_PLAYER_KEY);
+          return null;
         } catch { return null; }
       }
 
       function showNameForm() {
-        clearMessage(); els.authPanel.classList.remove("hide"); els.nameInput.value = state.player?.displayName || ""; window.setTimeout(() => els.nameInput.focus(), 0);
+        clearMessage(); clearAuthError(); els.authPanel.classList.remove("hide"); els.nameInput.value = state.player?.displayName || ""; window.setTimeout(() => els.nameInput.focus(), 0);
       }
 
       function renderIdentity() {
@@ -825,6 +913,8 @@
       function normalizeTeam(name) { return String(name || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\bturkey\b/g, "turkiye").replace(/\busa\b/g, "united states").replace(/\bcote d'ivoire\b/g, "ivory coast").replace(/[^a-z0-9]+/g, " ").trim(); }
       function formatPrediction(p) { return `${Number(p.home_score)} - ${Number(p.away_score)}`; }
       function readScore(input) { const v = input?.value.trim() ?? ""; if (!/^\d{1,2}$/.test(v)) return null; const n = Number(v); return Number.isInteger(n) && n >= 0 && n <= 99 ? n : null; }
+      function normalizeAllowedPlayerName(name) { return String(name ?? "").trim().toLocaleLowerCase("ar"); }
+      function isAllowedPlayerName(name) { return ALLOWED_PLAYER_NAME_SET.has(normalizeAllowedPlayerName(name)); }
       function normalizeDisplayName(v) { const name = String(v ?? "").replace(/\s+/g, " ").trim(); return name.length >= 2 && name.length <= 40 ? name : ""; }
       function randomToken() { const bytes = new Uint8Array(32); crypto.getRandomValues(bytes); return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join(""); }
 
@@ -840,6 +930,8 @@
       function renderStat(label, value) { return `<div class="stat"><div class="stat-label">${escapeHtml(label)}</div><div class="stat-value">${escapeHtml(value)}</div></div>`; }
       function empty(message) { return `<div class="empty">${escapeHtml(message)}</div>`; }
       function setBusy(button, busy, label) { if (!button) return; button.disabled = busy; button.textContent = label; }
+      function setAuthError(message) { els.authError.textContent = message; els.authError.classList.add("show"); }
+      function clearAuthError() { els.authError.textContent = ""; els.authError.classList.remove("show"); }
       function setMessage(message, type = "") { els.globalMessage.textContent = message; els.globalMessage.className = `message show ${type}`.trim(); }
       function clearMessage() { els.globalMessage.textContent = ""; els.globalMessage.className = "message"; }
       function toggleLanguage() { state.lang = state.lang === "ar" ? "en" : "ar"; localStorage.setItem(LOCAL_LANG_KEY, state.lang); renderApp(); }
