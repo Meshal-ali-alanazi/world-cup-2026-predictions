@@ -839,7 +839,7 @@
 
       function handleClick(event) {
         const page = event.target.closest("[data-page]"); if (page) { state.activePage = page.dataset.page; renderApp(); return; }
-        const save = event.target.closest("[data-save-match]"); if (save) { savePrediction(save.dataset.saveMatch); return; }
+        const save = event.target.closest("[data-save-match]"); if (save) { savePrediction(save.dataset.saveMatch, save.closest("[data-match-card]")); return; }
         const open = event.target.closest("[data-open-match]"); if (open) { openPredictionModal(open.dataset.openMatch); return; }
         const fetch = event.target.closest("[data-fetch-results]"); if (fetch) fetchOfficialResults(fetch);
       }
@@ -856,13 +856,14 @@
 
       function closePredictionModal() { state.activeMatchId = null; els.predictionModal.classList.remove("show"); els.modalBody.innerHTML = ""; }
 
-      async function savePrediction(matchId) {
+      async function savePrediction(matchId, sourceCard = document) {
         clearMessage();
         if (!state.player) { setMessage(t("enterNameFirst"), "error"); showNameForm(); return; }
         const match = state.matches.find((item) => String(item.football_data_id) === String(matchId));
         if (!match || !isPredictionOpen(match)) { setMessage(t("lockedMatch"), "error"); await loadMatches(); return; }
-        const homeScore = readScore(document.querySelector(`[data-home-score="${matchId}"]`));
-        const awayScore = readScore(document.querySelector(`[data-away-score="${matchId}"]`));
+        const inputRoot = sourceCard || document;
+        const homeScore = readScore(inputRoot.querySelector(`[data-home-score="${matchId}"]`));
+        const awayScore = readScore(inputRoot.querySelector(`[data-away-score="${matchId}"]`));
         if (homeScore === null || awayScore === null) { setMessage(t("invalidScore"), "error"); return; }
         const buttons = document.querySelectorAll(`[data-save-match="${matchId}"]`); buttons.forEach((button) => setBusy(button, true, t("saving")));
         try {
