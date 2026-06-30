@@ -304,6 +304,31 @@
 
       .prediction-row { display: grid; grid-template-columns: 82px 20px 82px auto; gap: 10px; align-items: center; border-top: 1px solid var(--line); padding-top: 14px; }
       .prediction-row input { text-align: center; font-weight: 900; }
+      .penalty-row {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(220px, 0.75fr);
+        gap: 10px;
+        align-items: center;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: rgba(255,255,255,0.04);
+        padding: 10px;
+      }
+
+      .penalty-label {
+        display: grid;
+        gap: 2px;
+        font-size: 13px;
+        font-weight: 900;
+      }
+
+      .penalty-label span {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
       .prediction-note, .muted { color: var(--muted); font-size: 13px; }
       .prediction-note { grid-column: 1 / -1; }
 
@@ -347,7 +372,7 @@
 
       @media (max-width: 640px) {
         .shell { width: min(100% - 20px, 1240px); padding-top: 14px; }
-        .auth-box, .stat-grid, .groups-grid, .toolbar, .match-main, .detail-grid { grid-template-columns: 1fr; }
+        .auth-box, .stat-grid, .groups-grid, .toolbar, .match-main, .detail-grid, .penalty-row { grid-template-columns: 1fr; }
         .team.away { grid-template-columns: 48px minmax(0, 1fr); text-align: start; }
         .team.away .flag-badge { grid-column: 1; grid-row: 1; }
         .team.away > div:not(.flag-badge) { grid-column: 2; }
@@ -419,7 +444,7 @@
       const LOCAL_PLAYER_TOKEN_KEY = "wc_predictor_token";
       const LOCAL_LANG_KEY = "wc2026_lang";
       const DATE_TIME_ZONE = "Asia/Riyadh";
-      const BASIC_MATCH_SELECT = "football_data_id,utc_date,status,stage,group_name,matchday,home_team_name,home_team_tla,away_team_name,away_team_tla,score_home,score_away,raw";
+      const BASIC_MATCH_SELECT = "football_data_id,utc_date,status,stage,group_name,matchday,home_team_name,home_team_tla,away_team_name,away_team_tla,score_home,score_away,score_duration,raw";
       const EXTENDED_MATCH_SELECT = `${BASIC_MATCH_SELECT},match_number,stadium,city,country,home_penalties,away_penalties,winner`;
       const ALLOWED_NAMES = ["مشعل", "فهد", "سرور", "فيصل", "محمد", "ابو عبيد المصريه", "سلمان", "سلطوني", "سلطان", "عبد الله"];
       const PLAYER_PINS = {
@@ -456,7 +481,9 @@
           myPredictions: "My predictions", recentResults: "Recent results", missingPredictions: "Upcoming matches without my prediction",
           adminTools: "Admin tools", fetchResults: "Fetch official results", adminNote: "Uses the existing Supabase Edge Function and admin PIN.",
           noMatches: "No matches loaded.", noRows: "No rows yet.", startsIn: "Starts in", today: "Today", tomorrow: "Tomorrow",
-          localTime: "Local time", group: "Group", match: "Match", stadium: "Stadium", city: "City", country: "Country", tbd: "TBD"
+          localTime: "Local time", group: "Group", match: "Match", stadium: "Stadium", city: "City", country: "Country", tbd: "TBD",
+          penaltyWinnerQuestion: "Who do you expect to win on penalties?", penaltyWinnerOptional: "Optional for knockout matches", noPenaltyWinner: "No penalty winner selected",
+          penaltyWinnerPrediction: "Penalty winner", penalties: "Penalties", decidedByPenalties: "Decided by penalties"
         },
         ar: {
           appTitle: "توقعات كأس العالم 2026", appSubtitle: "توقع نتائج المباريات، تابع ترتيب المجموعات، وتنافس في لوحة المتصدرين المباشرة.",
@@ -474,7 +501,9 @@
           myPredictions: "توقعاتي", recentResults: "آخر النتائج", missingPredictions: "مباريات قادمة بدون توقعي",
           adminTools: "أدوات الإدارة", fetchResults: "جلب النتائج الرسمية", adminNote: "يستخدم دالة Supabase Edge الحالية ورمز الإدارة.",
           noMatches: "لا توجد مباريات محملة.", noRows: "لا توجد بيانات بعد.", startsIn: "تبدأ بعد", today: "اليوم", tomorrow: "غدا",
-          localTime: "التوقيت المحلي", group: "المجموعة", match: "المباراة", stadium: "الملعب", city: "المدينة", country: "الدولة", tbd: "لم يحدد"
+          localTime: "التوقيت المحلي", group: "المجموعة", match: "المباراة", stadium: "الملعب", city: "المدينة", country: "الدولة", tbd: "لم يحدد",
+          penaltyWinnerQuestion: "من تتوقع يفوز بركلات الترجيح؟", penaltyWinnerOptional: "اختياري لمباريات خروج المغلوب", noPenaltyWinner: "لم يتم اختيار فائز بركلات الترجيح",
+          penaltyWinnerPrediction: "توقع فائز الترجيح", penalties: "ركلات الترجيح", decidedByPenalties: "حسمت بركلات الترجيح"
         }
       };
 
@@ -583,7 +612,7 @@
         const map = new Map();
         if (!state.client || !state.player || matches.length === 0) return map;
         const ids = matches.map((match) => match.football_data_id);
-        const { data, error } = await state.client.from("predictions").select("match_id,home_score,away_score,points,updated_at").eq("guest_id", state.player.id).in("match_id", ids);
+        const { data, error } = await state.client.from("predictions").select("match_id,home_score,away_score,points,predicted_penalty_winner,updated_at").eq("guest_id", state.player.id).in("match_id", ids);
         if (error) throw error;
         (data ?? []).forEach((prediction) => map.set(String(prediction.match_id), prediction));
         return map;
@@ -740,12 +769,18 @@
 
       function renderPredictionForm(match) {
         const p = match.prediction, id = escapeAttribute(match.football_data_id);
-        return `<div class="prediction-row"><input data-home-score="${id}" type="number" min="0" max="99" step="1" inputmode="numeric" placeholder="0" value="${escapeAttribute(p?.home_score ?? "")}"><span class="muted" style="text-align:center;font-weight:900;">-</span><input data-away-score="${id}" type="number" min="0" max="99" step="1" inputmode="numeric" placeholder="0" value="${escapeAttribute(p?.away_score ?? "")}"><button type="button" data-save-match="${id}">${escapeHtml(t("save"))}</button><div class="prediction-note">${p ? `${escapeHtml(t("yourPrediction"))}: ${escapeHtml(formatPrediction(p))} · ` : ""}${escapeHtml(predictionLockReason(match))}<button class="secondary" style="margin-inline-start:8px;min-height:30px;" type="button" data-open-match="${id}">${escapeHtml(t("match"))}</button></div></div>`;
+        const penaltyField = isKnockoutPredictionMatch(match) ? renderPenaltyWinnerField(match, id, p?.predicted_penalty_winner) : "";
+        return `<div class="prediction-row"><input data-home-score="${id}" type="number" min="0" max="99" step="1" inputmode="numeric" placeholder="0" value="${escapeAttribute(p?.home_score ?? "")}"><span class="muted" style="text-align:center;font-weight:900;">-</span><input data-away-score="${id}" type="number" min="0" max="99" step="1" inputmode="numeric" placeholder="0" value="${escapeAttribute(p?.away_score ?? "")}"><button type="button" data-save-match="${id}">${escapeHtml(t("save"))}</button>${penaltyField}<div class="prediction-note">${p ? `${escapeHtml(t("yourPrediction"))}: ${escapeHtml(formatFullPrediction(match, p))} · ` : ""}${escapeHtml(predictionLockReason(match))}<button class="secondary" style="margin-inline-start:8px;min-height:30px;" type="button" data-open-match="${id}">${escapeHtml(t("match"))}</button></div></div>`;
+      }
+
+      function renderPenaltyWinnerField(match, id, value) {
+        const selected = String(value || "");
+        return `<div class="penalty-row"><div class="penalty-label">${escapeHtml(t("penaltyWinnerQuestion"))}<span>${escapeHtml(t("penaltyWinnerOptional"))}</span></div><select data-penalty-winner="${id}"><option value="" ${selected ? "" : "selected"}>${escapeHtml(t("noPenaltyWinner"))}</option><option value="HOME_TEAM" ${selected === "HOME_TEAM" ? "selected" : ""}>${escapeHtml(localizedTeamName(match.home_team_name))}</option><option value="AWAY_TEAM" ${selected === "AWAY_TEAM" ? "selected" : ""}>${escapeHtml(localizedTeamName(match.away_team_name))}</option></select></div>`;
       }
 
       function renderMatchDetails(match) {
         const finished = isFinishedMatch(match), p = match.prediction;
-        return `<div class="detail-grid"><div class="detail-box"><div class="detail-label">${escapeHtml(finished ? t("finalScore") : t("status"))}</div><div class="detail-value">${escapeHtml(finished && hasFinalScore(match) ? `${Number(match.score_home)} - ${Number(match.score_away)}` : predictionLockReason(match))}</div></div><div class="detail-box"><div class="detail-label">${escapeHtml(t("yourPrediction"))}</div><div class="detail-value">${escapeHtml(p ? formatPrediction(p) : t("noPrediction"))}</div></div><div class="detail-box"><div class="detail-label">${escapeHtml(finished ? t("pointsGained") : t("match"))}</div><div class="detail-value">${escapeHtml(finished ? p?.points ?? 0 : stageLabel(match))}</div></div></div>`;
+        return `<div class="detail-grid"><div class="detail-box"><div class="detail-label">${escapeHtml(finished ? t("finalScore") : t("status"))}</div><div class="detail-value">${escapeHtml(finished && hasFinalScore(match) ? formatFinalScore(match) : predictionLockReason(match))}</div></div><div class="detail-box"><div class="detail-label">${escapeHtml(t("yourPrediction"))}</div><div class="detail-value">${escapeHtml(p ? formatFullPrediction(match, p) : t("noPrediction"))}</div></div><div class="detail-box"><div class="detail-label">${escapeHtml(finished ? t("pointsGained") : t("match"))}</div><div class="detail-value">${escapeHtml(finished ? p?.points ?? 0 : stageLabel(match))}</div></div></div>`;
       }
 
       function renderLeaderboardPage() {
@@ -818,10 +853,11 @@
         const inputRoot = sourceCard || document;
         const homeScore = readScore(inputRoot.querySelector(`[data-home-score="${matchId}"]`));
         const awayScore = readScore(inputRoot.querySelector(`[data-away-score="${matchId}"]`));
+        const predictedPenaltyWinner = readPenaltyWinner(inputRoot.querySelector(`[data-penalty-winner="${matchId}"]`), match);
         if (homeScore === null || awayScore === null) { setMessage(t("invalidScore"), "error"); return; }
         const buttons = document.querySelectorAll(`[data-save-match="${matchId}"]`); buttons.forEach((button) => setBusy(button, true, t("saving")));
         try {
-          const { error } = await state.client.rpc("save_guest_prediction", { p_guest_id: state.player.id, p_edit_token: state.player.editToken, p_display_name: state.player.displayName, p_match_id: Number(matchId), p_home_score: homeScore, p_away_score: awayScore });
+          const { error } = await state.client.rpc("save_guest_prediction", { p_guest_id: state.player.id, p_edit_token: state.player.editToken, p_display_name: state.player.displayName, p_match_id: Number(matchId), p_home_score: homeScore, p_away_score: awayScore, p_predicted_penalty_winner: predictedPenaltyWinner });
           if (error) throw error;
           setMessage(t("predictionSaved"), "success");
           await Promise.all([loadMatches(), loadLeaderboard()]);
@@ -889,6 +925,37 @@
       function isScoreValue(v) { return v !== null && v !== undefined && v !== "" && Number.isFinite(Number(v)); }
       function statusGroup(m) { if (isLiveMatch(m)) return "live"; if (isFinishedMatch(m)) return "finished"; return "upcoming"; }
       function predictionLockReason(m) { if (!state.player) return t("enterNameToPredict"); if (!isOpenPredictionStatus(m.status)) return t("lockedByStatus"); if (new Date(m.utc_date).getTime() <= Date.now()) return t("lockedAfterKickoff"); return t("openUntilKickoff"); }
+      function isKnockoutPredictionMatch(m) { const stage = normalizeStage(m.stage); return Boolean(stage) && !stage.includes("group"); }
+      function isPenaltyShootoutMatch(m) { return String(m.score_duration || "").toUpperCase() === "PENALTY_SHOOTOUT"; }
+      function actualPenaltyWinnerSide(match) {
+        const winner = String(match.winner || "").trim();
+        const upper = winner.toUpperCase();
+        if (upper === "HOME_TEAM" || upper === "AWAY_TEAM") return upper;
+        if (winner && normalizeTeam(winner) === normalizeTeam(match.home_team_name)) return "HOME_TEAM";
+        if (winner && normalizeTeam(winner) === normalizeTeam(match.away_team_name)) return "AWAY_TEAM";
+        return "";
+      }
+      function penaltyWinnerLabel(match, side) {
+        if (side === "HOME_TEAM") return localizedTeamName(match.home_team_name);
+        if (side === "AWAY_TEAM") return localizedTeamName(match.away_team_name);
+        return "";
+      }
+      function formatFinalScore(match) {
+        const score = `${Number(match.score_home)} - ${Number(match.score_away)}`;
+        if (!isPenaltyShootoutMatch(match)) return score;
+        const winnerName = penaltyWinnerLabel(match, actualPenaltyWinnerSide(match));
+        return winnerName ? `${score} · ${t("decidedByPenalties")}: ${winnerName}` : `${score} · ${t("decidedByPenalties")}`;
+      }
+      function formatFullPrediction(match, prediction) {
+        const score = formatPrediction(prediction);
+        const winnerName = penaltyWinnerLabel(match, prediction?.predicted_penalty_winner);
+        return winnerName ? `${score} · ${t("penalties")}: ${winnerName}` : score;
+      }
+      function readPenaltyWinner(select, match) {
+        if (!isKnockoutPredictionMatch(match)) return null;
+        const value = String(select?.value || "").toUpperCase();
+        return ["HOME_TEAM", "AWAY_TEAM"].includes(value) ? value : null;
+      }
       function isGroupStage(m) { const stage = normalizeStage(m.stage); return Boolean(extractGroup(m)) || stage.includes("group"); }
       function extractGroup(m) { const raw = String(m.group_name || "").toUpperCase(); return raw.match(/[A-L]$/)?.[0] || raw.match(/GROUP_?([A-L])/)?.[1] || teamMeta[m.home_team_name]?.[2] || null; }
       function stageLabel(m) { return isGroupStage(m) ? `${t("group")} ${extractGroup(m) || ""}`.trim() : String(m.stage || t("bracket")).replaceAll("_", " "); }
