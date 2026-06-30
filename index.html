@@ -569,6 +569,8 @@
         els.pageRoot.addEventListener("input", handleInput);
         els.pageRoot.addEventListener("change", handleInput);
         els.modalBody.addEventListener("click", handleClick);
+        els.modalBody.addEventListener("input", handleInput);
+        els.modalBody.addEventListener("change", handleInput);
       }
 
       function isConfigured() {
@@ -755,7 +757,7 @@
         return `<article class="match-card" data-match-card="${escapeAttribute(match.football_data_id)}">
           <div class="match-top"><span>#${escapeHtml(match.match_number || match.matchday || "-")} · ${escapeHtml(stageLabel(match))}</span><span>${escapeHtml(formatDateTime(kickoff))}</span></div>
           <div class="match-main">${renderTeam(match.home_team_name, match.home_team_tla, "home")}<div class="score-box"><div class="score-line">${escapeHtml(scoreText)}</div><div class="status ${statusClass}">${escapeHtml(statusText)}</div>${isFutureScheduledMatch(match) ? `<div class="countdown" data-countdown="${escapeAttribute(match.football_data_id)}" data-kickoff-ms="${kickoff.getTime()}">${escapeHtml(formatCountdown(kickoff.getTime() - Date.now()))}</div>` : ""}</div>${renderTeam(match.away_team_name, match.away_team_tla, "away")}</div>
-          <div class="muted">${escapeHtml(t("group"))} ${escapeHtml(extractGroup(match) || "-")} · ${escapeHtml(venue)}</div>
+          <div class="muted">${escapeHtml(stageLabel(match))} · ${escapeHtml(venue)}</div>
           ${isOpen ? renderPredictionForm(match) : renderMatchDetails(match)}
         </article>`;
       }
@@ -769,13 +771,13 @@
 
       function renderPredictionForm(match) {
         const p = match.prediction, id = escapeAttribute(match.football_data_id);
-        const penaltyField = isKnockoutPredictionMatch(match) ? renderPenaltyWinnerField(match, id, p?.predicted_penalty_winner) : "";
+        const penaltyField = isKnockoutPredictionMatch(match) ? renderPenaltyWinnerField(match, id, p?.predicted_penalty_winner, isDrawScore(p?.home_score, p?.away_score)) : "";
         return `<div class="prediction-row"><input data-home-score="${id}" type="number" min="0" max="99" step="1" inputmode="numeric" placeholder="0" value="${escapeAttribute(p?.home_score ?? "")}"><span class="muted" style="text-align:center;font-weight:900;">-</span><input data-away-score="${id}" type="number" min="0" max="99" step="1" inputmode="numeric" placeholder="0" value="${escapeAttribute(p?.away_score ?? "")}"><button type="button" data-save-match="${id}">${escapeHtml(t("save"))}</button>${penaltyField}<div class="prediction-note">${p ? `${escapeHtml(t("yourPrediction"))}: ${escapeHtml(formatFullPrediction(match, p))} · ` : ""}${escapeHtml(predictionLockReason(match))}<button class="secondary" style="margin-inline-start:8px;min-height:30px;" type="button" data-open-match="${id}">${escapeHtml(t("match"))}</button></div></div>`;
       }
 
-      function renderPenaltyWinnerField(match, id, value) {
+      function renderPenaltyWinnerField(match, id, value, visible) {
         const selected = String(value || "");
-        return `<div class="penalty-row"><div class="penalty-label">${escapeHtml(t("penaltyWinnerQuestion"))}<span>${escapeHtml(t("penaltyWinnerOptional"))}</span></div><select data-penalty-winner="${id}"><option value="" ${selected ? "" : "selected"}>${escapeHtml(t("noPenaltyWinner"))}</option><option value="HOME_TEAM" ${selected === "HOME_TEAM" ? "selected" : ""}>${escapeHtml(localizedTeamName(match.home_team_name))}</option><option value="AWAY_TEAM" ${selected === "AWAY_TEAM" ? "selected" : ""}>${escapeHtml(localizedTeamName(match.away_team_name))}</option></select></div>`;
+        return `<div class="penalty-row ${visible ? "" : "hide"}" data-penalty-row="${id}"><div class="penalty-label">${escapeHtml(t("penaltyWinnerQuestion"))}<span>${escapeHtml(t("penaltyWinnerOptional"))}</span></div><select data-penalty-winner="${id}" ${visible ? "" : "disabled"}><option value="" ${selected ? "" : "selected"}>${escapeHtml(t("noPenaltyWinner"))}</option><option value="HOME_TEAM" ${selected === "HOME_TEAM" ? "selected" : ""}>${escapeHtml(localizedTeamName(match.home_team_name))}</option><option value="AWAY_TEAM" ${selected === "AWAY_TEAM" ? "selected" : ""}>${escapeHtml(localizedTeamName(match.away_team_name))}</option></select></div>`;
       }
 
       function renderMatchDetails(match) {
@@ -834,6 +836,11 @@
       }
 
       function handleInput(event) {
+        const scoreInput = event.target.closest("[data-home-score], [data-away-score]");
+        if (scoreInput) {
+          updatePenaltyFieldVisibility(scoreInput.closest("[data-match-card]"));
+          return;
+        }
         const field = event.target.closest("[data-filter]"); if (!field) return;
         state.filters[field.dataset.filter] = field.value; renderApp();
       }
@@ -853,7 +860,7 @@
         const inputRoot = sourceCard || document;
         const homeScore = readScore(inputRoot.querySelector(`[data-home-score="${matchId}"]`));
         const awayScore = readScore(inputRoot.querySelector(`[data-away-score="${matchId}"]`));
-        const predictedPenaltyWinner = readPenaltyWinner(inputRoot.querySelector(`[data-penalty-winner="${matchId}"]`), match);
+        const predictedPenaltyWinner = readPenaltyWinner(inputRoot.querySelector(`[data-penalty-winner="${matchId}"]`), match, homeScore, awayScore);
         if (homeScore === null || awayScore === null) { setMessage(t("invalidScore"), "error"); return; }
         const buttons = document.querySelectorAll(`[data-save-match="${matchId}"]`); buttons.forEach((button) => setBusy(button, true, t("saving")));
         try {
@@ -927,6 +934,23 @@
       function predictionLockReason(m) { if (!state.player) return t("enterNameToPredict"); if (!isOpenPredictionStatus(m.status)) return t("lockedByStatus"); if (new Date(m.utc_date).getTime() <= Date.now()) return t("lockedAfterKickoff"); return t("openUntilKickoff"); }
       function isKnockoutPredictionMatch(m) { const stage = normalizeStage(m.stage); return Boolean(stage) && !stage.includes("group"); }
       function isPenaltyShootoutMatch(m) { return String(m.score_duration || "").toUpperCase() === "PENALTY_SHOOTOUT"; }
+      function isDrawScore(homeScore, awayScore) {
+        return isScoreValue(homeScore) && isScoreValue(awayScore) && Number(homeScore) === Number(awayScore);
+      }
+      function updatePenaltyFieldVisibility(card) {
+        if (!card) return;
+        const row = card.querySelector("[data-penalty-row]");
+        if (!row) return;
+        const select = row.querySelector("[data-penalty-winner]");
+        const homeScore = readScore(card.querySelector("[data-home-score]"));
+        const awayScore = readScore(card.querySelector("[data-away-score]"));
+        const visible = homeScore !== null && awayScore !== null && homeScore === awayScore;
+        row.classList.toggle("hide", !visible);
+        if (select) {
+          select.disabled = !visible;
+          if (!visible) select.value = "";
+        }
+      }
       function actualPenaltyWinnerSide(match) {
         const winner = String(match.winner || "").trim();
         const upper = winner.toUpperCase();
@@ -948,16 +972,24 @@
       }
       function formatFullPrediction(match, prediction) {
         const score = formatPrediction(prediction);
+        if (!isDrawScore(prediction?.home_score, prediction?.away_score)) return score;
         const winnerName = penaltyWinnerLabel(match, prediction?.predicted_penalty_winner);
         return winnerName ? `${score} · ${t("penalties")}: ${winnerName}` : score;
       }
-      function readPenaltyWinner(select, match) {
+      function readPenaltyWinner(select, match, homeScore, awayScore) {
         if (!isKnockoutPredictionMatch(match)) return null;
+        if (!isDrawScore(homeScore, awayScore)) return null;
         const value = String(select?.value || "").toUpperCase();
         return ["HOME_TEAM", "AWAY_TEAM"].includes(value) ? value : null;
       }
-      function isGroupStage(m) { const stage = normalizeStage(m.stage); return Boolean(extractGroup(m)) || stage.includes("group"); }
-      function extractGroup(m) { const raw = String(m.group_name || "").toUpperCase(); return raw.match(/[A-L]$/)?.[0] || raw.match(/GROUP_?([A-L])/)?.[1] || teamMeta[m.home_team_name]?.[2] || null; }
+      function isGroupStage(m) { const stage = normalizeStage(m.stage); return stage.includes("group") || Boolean(extractGroup(m)); }
+      function extractGroup(m) {
+        const raw = String(m.group_name || "").toUpperCase();
+        const explicitGroup = raw.match(/[A-L]$/)?.[0] || raw.match(/GROUP_?([A-L])/)?.[1];
+        if (explicitGroup) return explicitGroup;
+        const stage = normalizeStage(m.stage);
+        return stage.includes("group") ? teamMeta[m.home_team_name]?.[2] || null : null;
+      }
       function stageLabel(m) { return isGroupStage(m) ? `${t("group")} ${extractGroup(m) || ""}`.trim() : String(m.stage || t("bracket")).replaceAll("_", " "); }
       function normalizeStage(v) { return String(v || "").toLowerCase().replaceAll("_", " ").replace(/[^a-z0-9 ]/g, "").trim(); }
       function isOpenPredictionStatus(status) { return ["SCHEDULED", "TIMED"].includes(String(status || "").toUpperCase()); }
